@@ -3,3 +3,4 @@ vendor
 /profile.out
 /.coverage
 coverage.txt
+/*.txt
