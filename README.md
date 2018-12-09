@@ -12,6 +12,7 @@ CLI tool to check whether dead urls are included in files.
 
 * [Motivation](#motivation)
 * [Install](#install)
+* [Docker Image](#docker-image)
 * [Getting Started](#getting-started)
 * [Configuration](#configuration)
 * [Change Log](https://github.com/suzuki-shunsuke/durl/releases)
@@ -34,6 +35,19 @@ For example, you can also check your blog posts with durl.
 ## Install
 
 `durl` is written with Golang and binary is distributed at [release page](https://github.com/suzuki-shunsuke/durl/releases), so installation is easy.
+
+## Docker Image
+
+We provide busybox based docker image installed `durl`.
+
+https://hub.docker.com/r/suzukishunsuke/durl
+
+You can try to use durl without installation, and this is useful for CI.
+
+```
+$ docker run -ti --rm -v $PWD:/workspace -w /workspace suzukishunsuke/durl sh
+# echo foo.txt | durl check
+```
 
 ## Getting Started
 
