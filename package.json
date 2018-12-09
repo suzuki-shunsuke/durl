@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "test": "go test -race -covermode=atomic ./...",
+    "fmt": "bash scripts/fmt.sh",
+    "vet": "go vet ./...",
+    "lint": "gometalinter ./...",
+    "c": "bash scripts/coverage.sh",
+    "tag": "bash scripts/tag.sh",
+    "gen-mock": "gomic gen && npm run fmt",
+    "durl": "bash scripts/durl.sh",
+    "ci-local": "circleci build -e LOCAL=true"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run vet && npm run lint && npm test",
+      "commit-msg": "commitlint -e $GIT_PARAMS"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^7.2.1",
+    "@commitlint/config-angular": "^7.1.2",
+    "husky": "^1.1.3"
+  }
+}

@@ -1,0 +1,9 @@
+---
+default:
+items:
+- src:
+    file: internal/domain/interface.go
+    interface: Fsys
+  dest:
+    package: test
+    file: internal/test/fsys_mock.go
