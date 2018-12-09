@@ -25,16 +25,17 @@ func Test_extractURLsFromFiles(t *testing.T) {
 		title    string
 		files    map[string]File
 		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
-		set      *strset.Set
+		set      map[string]*strset.Set
 	}{{
 		"no url", map[string]File{
 			"foo.txt": File{[]byte(`foo`), nil},
-		}, assert.Nil, strset.New(),
+		}, assert.Nil, map[string]*strset.Set{},
 	}, {
 		"normal", map[string]File{
 			"foo.txt": File{[]byte(`foo`), nil},
 			"bar.txt": File{[]byte(`http://example.com`), nil},
-		}, assert.Nil, strset.New("http://example.com"),
+		}, assert.Nil, map[string]*strset.Set{
+			"http://example.com": strset.New("bar.txt")},
 	}, {
 		"error", map[string]File{
 			"bar.txt": File{[]byte(`http://example.com`), nil},
@@ -60,9 +61,7 @@ func Test_extractURLsFromFiles(t *testing.T) {
 			set, err := extractURLsFromFiles(fsys, files)
 			tt.checkErr(t, err)
 			if err == nil {
-				if !set.IsEqual(tt.set) {
-					t.Fatalf("set = %v, wanted %v", set, tt.set)
-				}
+				assert.Equal(t, tt.set, set)
 			}
 		})
 	}

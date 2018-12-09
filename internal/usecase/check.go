@@ -25,11 +25,15 @@ func Check(fsys domain.Fsys, stdin io.Reader) error {
 	if err != nil {
 		return err
 	}
+	return checkURLs(urls)
+}
+
+func checkURLs(urls map[string]*strset.Set) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
 	}
-	urls.Each(func(u string) bool {
+	for u := range urls {
 		eg.Go(func() error {
 			// GET url
 			req, err := http.NewRequest(http.MethodGet, u, nil)
@@ -48,18 +52,23 @@ func Check(fsys domain.Fsys, stdin io.Reader) error {
 			}
 			return nil
 		})
-		return true
-	})
+	}
 	return eg.Wait()
 }
 
-func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (*strset.Set, error) {
+func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {
 	size := files.Size()
 	if size == 0 {
 		return nil, nil
 	}
 	// extract urls
-	urlsChan := make(chan *strset.Set, size)
+	type (
+		File struct {
+			path string
+			urls *strset.Set
+		}
+	)
+	urlsChan := make(chan File, size)
 	eg, ctx := errgroup.WithContext(context.Background())
 	files.Each(func(p string) bool {
 		eg.Go(func() error {
@@ -67,7 +76,7 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (*strset.Set, err
 			if err != nil {
 				return err
 			}
-			urlsChan <- arr
+			urlsChan <- File{path: p, urls: arr}
 			return nil
 		})
 		return true
@@ -76,9 +85,17 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (*strset.Set, err
 		return nil, err
 	}
 	close(urlsChan)
-	urls := strset.New()
-	for set := range urlsChan {
-		urls.Merge(set)
+	urls := map[string]*strset.Set{}
+	for f := range urlsChan {
+		f.urls.Each(func(u string) bool {
+			v, ok := urls[u]
+			if ok {
+				v.Add(f.path)
+				return true
+			}
+			urls[u] = strset.New(f.path)
+			return true
+		})
 	}
 	return urls, nil
 }
