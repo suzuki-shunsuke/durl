@@ -88,6 +88,9 @@ func checkURLs(urls map[string]*strset.Set) error {
 		Timeout: domain.DefaultTimeout,
 	}
 	for u, files := range urls {
+		// https://golang.org/doc/faq#closures_and_goroutines
+		u := u
+		files := files
 		eg.Go(func() error {
 			if err := checkURL(ctx, client, u); err != nil {
 				return errors.Wrap(err, files.String())
