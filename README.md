@@ -8,7 +8,7 @@
 [![GitHub tag](https://img.shields.io/github/tag/suzuki-shunsuke/durl.svg)](https://github.com/suzuki-shunsuke/durl/releases)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/durl/master/LICENSE)
 
-cli tool to check whether dead urls are included in files.
+CLI tool to check whether dead urls are included in files.
 
 * [Motivation](#motivation)
 * [Install](#install)
@@ -59,7 +59,7 @@ Then check the file with `durl check`.
 
 ```
 $ echo foo.txt | durl check
-[foo.txt] http://example.com/bar is broken (404)
+[foo.txt] http://example.com/bar is dead (404)
 ```
 
 It is good to use `durl` combining with the `find` command.

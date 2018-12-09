@@ -20,7 +20,7 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
 
-// Check checks whether broken urls are included in files.
+// Check checks whether dead urls are included in files.
 func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	cfg, err := readCfg(fsys, cfgPath)
 	if err != nil {
@@ -114,7 +114,7 @@ func checkURL(ctx context.Context, client http.Client, u string) error {
 	resp.Body.Close()
 	// check status code
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("%s is broken (%d)", u, resp.StatusCode)
+		return fmt.Errorf("%s is dead (%d)", u, resp.StatusCode)
 	}
 	return nil
 }

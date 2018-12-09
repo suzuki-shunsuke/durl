@@ -14,7 +14,7 @@ func Main() {
 	app.Name = "durl"
 	app.Version = domain.Version
 	app.Author = "suzuki-shunsuke https://github.com/suzuki-shunsuke"
-	app.Usage = "check whether broken urls are included in files"
+	app.Usage = "check whether dead urls are included in files"
 
 	app.Commands = []cli.Command{
 		InitCommand,

@@ -10,7 +10,7 @@ const (
 	// CfgTpl is a template of configuration file.
 	CfgTpl = `
 ---
-# configuration file of durl, which is a CLI tool to check whether broken urls are included in files.
+# configuration file of durl, which is a CLI tool to check whether dead urls are included in files.
 # https://github.com/suzuki-shunsuke/durl
 ignore_urls:
 - https://github.com/suzuki-shunsuke/durl
