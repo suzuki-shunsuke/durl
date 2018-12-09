@@ -77,6 +77,14 @@
   revision = "70b957f3b65e069b4930ea94e2721eefa0f8f695"
 
 [[projects]]
+  digest = "1:f1e9221c1e17a438f8758d8da7be7ced1fc6132c4555d589d80f697d2cba7c8a"
+  name = "gopkg.in/h2non/gock.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a6029d17e101ac1594adafea9e63fd8c988a8701"
+  version = "v1.0.12"
+
+[[projects]]
   digest = "1:0d72291ecb10a37e75f0484eb8e700b0cffbd2501f6e63b282028dcc7830d33c"
   name = "mvdan.cc/xurls"
   packages = ["."]
@@ -94,6 +102,7 @@
     "github.com/urfave/cli",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/sync/errgroup",
+    "gopkg.in/h2non/gock.v1",
     "mvdan.cc/xurls",
   ]
   solver-name = "gps-cdcl"
