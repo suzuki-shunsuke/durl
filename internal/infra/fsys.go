@@ -7,6 +7,7 @@ import (
 )
 
 type (
+	// Fsys represents operation to filesystem.
 	Fsys struct{}
 )
 

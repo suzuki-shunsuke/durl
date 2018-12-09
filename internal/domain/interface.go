@@ -5,6 +5,7 @@ import (
 )
 
 type (
+	// Fsys represents operation to filesystem.
 	Fsys interface {
 		Exist(string) bool
 		Getwd() (string, error)

@@ -19,6 +19,7 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
 
+// Check checks whether broken urls are included in files.
 func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	cfg, err := readCfg(fsys, cfgPath)
 	if err != nil {
