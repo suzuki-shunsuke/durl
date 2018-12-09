@@ -1,6 +1,6 @@
 ---
 builds:
-  - binary: gomic
+  - binary: durl
     main: cmd/durl/main.go
     env:
       - CGO_ENABLED=0
