@@ -54,6 +54,12 @@ func TestCheck(t *testing.T) {
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, assert.Nil,
 	}, {
+		"ignore url", "foo.txt", map[string]int{"/foo": 500},
+		map[string]File{
+			"foo.txt":             {[]byte("http://example.com/foo"), nil},
+			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://example.com/foo"]}`), nil},
+		}, assert.Nil,
+	}, {
 		"http error", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
 			"foo.txt":             {[]byte("http://example.com/foo"), nil},
