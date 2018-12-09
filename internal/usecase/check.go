@@ -14,6 +14,7 @@ import (
 
 	"mvdan.cc/xurls"
 
+	"github.com/pkg/errors"
 	"github.com/scylladb/go-set/strset"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
@@ -86,9 +87,12 @@ func checkURLs(urls map[string]*strset.Set) error {
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
 	}
-	for u := range urls {
+	for u, files := range urls {
 		eg.Go(func() error {
-			return checkURL(ctx, client, u)
+			if err := checkURL(ctx, client, u); err != nil {
+				return errors.Wrap(err, files.String())
+			}
+			return nil
 		})
 	}
 	return eg.Wait()
