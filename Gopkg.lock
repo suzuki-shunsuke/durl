@@ -85,6 +85,14 @@
   version = "v1.0.12"
 
 [[projects]]
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
+[[projects]]
   digest = "1:0d72291ecb10a37e75f0484eb8e700b0cffbd2501f6e63b282028dcc7830d33c"
   name = "mvdan.cc/xurls"
   packages = ["."]
@@ -103,6 +111,7 @@
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/sync/errgroup",
     "gopkg.in/h2non/gock.v1",
+    "gopkg.in/yaml.v2",
     "mvdan.cc/xurls",
   ]
   solver-name = "gps-cdcl"

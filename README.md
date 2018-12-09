@@ -14,6 +14,9 @@ How sad it is!
 So we have developed this tool.
 It is good to use this tool at CI.
 
+Of course, you can use durl other than oss documents.
+For example, you can also check your blog posts with durl.
+
 ## Install
 
 durl is written with Golang and binary is distributed at [release page](https://github.com/suzuki-shunsuke/durl/releases), so installation is easy.
@@ -35,6 +38,7 @@ http://example.com/bar is broken (404)
 ## Configuration
 
 ```yaml
+---
 ignore_urls:
 - http://example.com/bar
 ```

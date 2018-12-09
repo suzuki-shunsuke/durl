@@ -26,10 +26,11 @@ var CheckCommand = cli.Command{
 }
 
 func check(c *cli.Context) error {
+	cfgPath := c.String("config")
 	if terminal.IsTerminal(0) {
 		return wrapUsecase(
-			usecase.Check(infra.Fsys{}, nil))
+			usecase.Check(infra.Fsys{}, nil, cfgPath))
 	}
 	return wrapUsecase(
-		usecase.Check(infra.Fsys{}, os.Stdin))
+		usecase.Check(infra.Fsys{}, os.Stdin, cfgPath))
 }

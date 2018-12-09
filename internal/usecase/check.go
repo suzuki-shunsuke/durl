@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 
 	"golang.org/x/sync/errgroup"
+
+	"gopkg.in/yaml.v2"
 
 	"mvdan.cc/xurls"
 
@@ -16,7 +19,12 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
 
-func Check(fsys domain.Fsys, stdin io.Reader) error {
+func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
+	cfg, err := readCfg(fsys, cfgPath)
+	if err != nil {
+		return err
+	}
+
 	files, err := getFiles(stdin)
 	if err != nil {
 		return err
@@ -25,7 +33,51 @@ func Check(fsys domain.Fsys, stdin io.Reader) error {
 	if err != nil {
 		return err
 	}
+	for _, u := range cfg.IgnoreURLs {
+		delete(urls, u)
+	}
 	return checkURLs(urls)
+}
+
+func findCfg(fsys domain.Fsys) (string, error) {
+	wd, err := fsys.Getwd()
+	if err != nil {
+		return "", err
+	}
+	for {
+		p := filepath.Join(wd, ".durl.yml")
+		if fsys.Exist(p) {
+			return p, nil
+		}
+		if wd == "/" || wd == "" {
+			return "", fmt.Errorf(".durl.yml is not found")
+		}
+		wd = filepath.Dir(wd)
+	}
+}
+
+func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
+	cfg := domain.Cfg{}
+	if cfgPath == "" {
+		d, err := findCfg(fsys)
+		if err != nil {
+			return cfg, err
+		}
+		cfgPath = d
+	}
+	rc, err := fsys.Open(cfgPath)
+	if err != nil {
+		return cfg, err
+	}
+	defer rc.Close()
+	if err := yaml.NewDecoder(rc).Decode(&cfg); err != nil {
+		return cfg, err
+	}
+	return initCfg(cfg)
+}
+
+func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
+	return cfg, nil
 }
 
 func checkURLs(urls map[string]*strset.Set) error {

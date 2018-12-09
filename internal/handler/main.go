@@ -17,6 +17,7 @@ func Main() {
 	app.Usage = "check whether broken urls are included in files"
 
 	app.Commands = []cli.Command{
+		InitCommand,
 		CheckCommand,
 	}
 	app.Run(os.Args)

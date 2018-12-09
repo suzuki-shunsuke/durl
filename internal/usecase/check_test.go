@@ -26,7 +26,7 @@ type (
 	}
 )
 
-func newFsys(t *testing.T, files map[string]File) domain.Fsys {
+func newFsys(t *testing.T, files map[string]File) *test.Fsys {
 	return test.NewFsys(t, nil).
 		SetFuncOpen(func(p string) (io.ReadCloser, error) {
 			if f, ok := files[p]; ok {
@@ -50,17 +50,20 @@ func TestCheck(t *testing.T) {
 	}{{
 		"normal", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
-			"foo.txt": {[]byte("http://example.com/foo"), nil},
+			"foo.txt":             {[]byte("http://example.com/foo"), nil},
+			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, assert.Nil,
 	}, {
 		"http error", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
-			"foo.txt": {[]byte("http://example.com/foo"), nil},
+			"foo.txt":             {[]byte("http://example.com/foo"), nil},
+			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, assert.NotNil,
 	}, {
 		"file read error", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
-			"foo.txt": {nil, fmt.Errorf("failed to read a file")},
+			"foo.txt":             {nil, fmt.Errorf("failed to read a file")},
+			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, assert.NotNil,
 	}}
 	for _, tt := range data {
@@ -69,7 +72,10 @@ func TestCheck(t *testing.T) {
 			for p, c := range tt.replies {
 				g.Get(p).Reply(c)
 			}
-			tt.checkErr(t, Check(newFsys(t, tt.files), bytes.NewBufferString(tt.in)))
+			fsys := newFsys(t, tt.files).
+				SetReturnGetwd("/home/foo", nil).
+				SetReturnExist(true)
+			tt.checkErr(t, Check(fsys, bytes.NewBufferString(tt.in), ""))
 		})
 	}
 }
