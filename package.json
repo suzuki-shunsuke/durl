@@ -8,11 +8,12 @@
     "tag": "bash scripts/tag.sh",
     "gen-mock": "gomic gen && npm run fmt",
     "durl": "bash scripts/durl.sh",
+    "image": "docker build -t suzukishunsuke/durl:local .",
     "ci-local": "circleci build -e LOCAL=true"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run vet && npm run lint && npm test",
+      "pre-commit": "npm run vet && npm test && npm run durl && npm run lint",
       "commit-msg": "commitlint -e $GIT_PARAMS"
     }
   },

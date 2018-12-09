@@ -2,15 +2,6 @@
 # configuration file of durl, which is a CLI tool to check whether broken urls are included in files.
 # https://github.com/suzuki-shunsuke/durl
 ignore_urls:
-  - https://github.com/suzuki-shunsuke/durl
-  - https://github.com/suzuki-shunsuke/durl/blob/master/.circleci/config.yml
-  - https://github.com/suzuki-shunsuke/durl/blob/master/package.json
-  - https://github.com/suzuki-shunsuke/durl/blob/master/internal/domain/version.go
-  - https://github.com/suzuki-shunsuke/durl/releases
-  - https://circleci.com/gh/suzuki-shunsuke/durl
-  - https://raw.githubusercontent.com/suzuki-shunsuke/durl/master/LICENSE
-  - https://circleci.com/gh/suzuki-shunsuke/durl.svg?style=svg
-  - http://godoc.org/github.com/suzuki-shunsuke/durl
-  - https://codecov.io/gh/suzuki-shunsuke/durl
   - http://example.com/foo
   - http://example.com/bar
+  - https://github.com/suzuki-shunsuke/durl/releases/download/v${DURL_VERSION}/durl_${DURL_VERSION}_linux_amd64.tar.gz
