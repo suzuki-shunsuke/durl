@@ -50,17 +50,17 @@ func TestCheck(t *testing.T) {
 	}{{
 		"normal", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
-			"foo.txt": File{[]byte("http://example.com/foo"), nil},
+			"foo.txt": {[]byte("http://example.com/foo"), nil},
 		}, assert.Nil,
 	}, {
 		"http error", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
-			"foo.txt": File{[]byte("http://example.com/foo"), nil},
+			"foo.txt": {[]byte("http://example.com/foo"), nil},
 		}, assert.NotNil,
 	}, {
 		"file read error", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
-			"foo.txt": File{nil, fmt.Errorf("failed to read a file")},
+			"foo.txt": {nil, fmt.Errorf("failed to read a file")},
 		}, assert.NotNil,
 	}}
 	for _, tt := range data {
@@ -142,18 +142,18 @@ func Test_extractURLsFromFiles(t *testing.T) {
 		set      map[string]*strset.Set
 	}{{
 		"no url", map[string]File{
-			"foo.txt": File{[]byte(`foo`), nil},
+			"foo.txt": {[]byte(`foo`), nil},
 		}, assert.Nil, map[string]*strset.Set{},
 	}, {
 		"normal", map[string]File{
-			"foo.txt": File{[]byte(`foo`), nil},
-			"bar.txt": File{[]byte(`http://example.com`), nil},
+			"foo.txt": {[]byte(`foo`), nil},
+			"bar.txt": {[]byte(`http://example.com`), nil},
 		}, assert.Nil, map[string]*strset.Set{
 			"http://example.com": strset.New("bar.txt")},
 	}, {
 		"error", map[string]File{
-			"bar.txt": File{[]byte(`http://example.com`), nil},
-			"foo.txt": File{nil, fmt.Errorf("failed to read a file")},
+			"bar.txt": {[]byte(`http://example.com`), nil},
+			"foo.txt": {nil, fmt.Errorf("failed to read a file")},
 		}, assert.NotNil, nil,
 	}}
 	for _, tt := range data {

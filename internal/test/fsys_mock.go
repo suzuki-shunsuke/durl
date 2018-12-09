@@ -14,11 +14,11 @@ import (
 type (
 	// Fsys is a mock.
 	Fsys struct {
-		t *testing.T
-		name string
+		t                      *testing.T
+		name                   string
 		callbackNotImplemented gomic.CallbackNotImplemented
-		impl struct {
-				Open func(p0 string) (io.ReadCloser, error)
+		impl                   struct {
+			Open func(p0 string) (io.ReadCloser, error)
 		}
 	}
 )
@@ -31,7 +31,7 @@ func NewFsys(t *testing.T, cb gomic.CallbackNotImplemented) *Fsys {
 
 // Open is a mock method.
 func (mock Fsys) Open(p0 string) (io.ReadCloser, error) {
-	methodName := "Open"  // nolint: goconst
+	methodName := "Open" // nolint: goconst
 	if mock.impl.Open != nil {
 		return mock.impl.Open(p0)
 	}
@@ -49,7 +49,6 @@ func (mock *Fsys) SetFuncOpen(impl func(p0 string) (io.ReadCloser, error)) *Fsys
 	return mock
 }
 
-
 // SetReturnOpen sets a fake method.
 func (mock *Fsys) SetReturnOpen(r0 io.ReadCloser, r1 error) *Fsys {
 	mock.impl.Open = func(string) (io.ReadCloser, error) {
@@ -66,4 +65,3 @@ func (mock Fsys) fakeZeroOpen(p0 string) (io.ReadCloser, error) {
 	)
 	return r0, r1
 }
-
