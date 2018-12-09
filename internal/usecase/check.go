@@ -35,25 +35,28 @@ func checkURLs(urls map[string]*strset.Set) error {
 	}
 	for u := range urls {
 		eg.Go(func() error {
-			// GET url
-			req, err := http.NewRequest(http.MethodGet, u, nil)
-			if err != nil {
-				return err
-			}
-			req = req.WithContext(ctx)
-			resp, err := client.Do(req)
-			if err != nil {
-				return err
-			}
-			resp.Body.Close()
-			// check status code
-			if resp.StatusCode != 200 {
-				return fmt.Errorf("%s is broken (%d)", u, resp.StatusCode)
-			}
-			return nil
+			return checkURL(ctx, client, u)
 		})
 	}
 	return eg.Wait()
+}
+
+func checkURL(ctx context.Context, client http.Client, u string) error {
+	req, err := http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	// check status code
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("%s is broken (%d)", u, resp.StatusCode)
+	}
+	return nil
 }
 
 func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {
