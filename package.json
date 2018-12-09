@@ -7,6 +7,7 @@
     "c": "bash scripts/coverage.sh",
     "tag": "bash scripts/tag.sh",
     "gen-mock": "gomic gen && npm run fmt",
+    "durl": "bash scripts/durl.sh",
     "ci-local": "circleci build -e LOCAL=true"
   },
   "husky": {
