@@ -4,3 +4,4 @@ vendor
 /.coverage
 coverage.txt
 /*.txt
+/.git-rm-branch.yml
