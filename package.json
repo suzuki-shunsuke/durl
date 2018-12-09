@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "go test ./... -covermode=atomic",
+    "test": "go test -race -covermode=atomic ./...",
     "fmt": "bash scripts/fmt.sh",
     "vet": "go vet ./...",
     "lint": "gometalinter ./...",
