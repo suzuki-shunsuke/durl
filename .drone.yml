@@ -66,10 +66,24 @@ steps:
     when:
       event:
         - tag
-  - name: goreleaser
+  - name: build with goreleaser (not release)
+    image: *docker_goci
+    commands:
+      - bash scripts/release.sh
+    when:
+      event:
+        - push
+        - pull_request
+  - name: build and release with goreleaser
     image: *docker_goci
     commands:
       - CIRCLE_TAG="$DRONE_TAG" bash scripts/release.sh
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token
+    when:
+      event:
+        - tag
   - name: build and push docker
     image: &docker_plugin plugins/docker:17.12
     settings:
