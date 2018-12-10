@@ -1,4 +1,4 @@
 package domain
 
 // Version is the durl's version.
-const Version = "0.1.1-4"
+const Version = "0.1.1"
