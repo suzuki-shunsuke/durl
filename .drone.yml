@@ -1,0 +1,88 @@
+---
+kind: pipeline
+name: commitlint
+steps:
+  - name: npm install
+    image: &node_image node:10.14.1-alpine
+    commands:
+      - npm i
+  - name: tag/commitlint
+    image: *node_image
+    commands:
+      - npx commitlint --from HEAD~1 --to HEAD
+    when:
+      event:
+        - tag
+        - push
+  - name: pr/commitlint
+    image: *node_image
+    commands:
+      - npx commitlint --from master --to HEAD || exit 1
+    when:
+      event:
+        - pull_request
+---
+kind: pipeline
+name: build
+steps:
+  - name: dep-dl
+    image: &docker_goci suzukishunsuke/go-ci:1.0.0
+    commands:
+      - dep-dl
+  - name: durl
+    image: *docker_goci
+    commands:
+      - bash scripts/durl.sh
+  - name: go vet
+    image: golang:1.11.2-alpine3.8
+    commands:
+      - go vet ./...
+  - name: gometalinter
+    image: *docker_goci
+    commands:
+      - gometalinter ./...
+  - name: codecov
+    image: golang:1.11.2
+    commands:
+      - bash scripts/codecov-test.sh
+      - test "$LOCAL" == "true" || bash <(curl -s https://codecov.io/bash)
+  - name: goreleaser
+    image: *docker_goci
+    commands:
+      - CIRCLE_TAG="$DRONE_TAG" bash scripts/release.sh
+  - name: tag/docker
+    image: &docker_plugin plugins/docker:17.12
+    settings:
+      tags:
+        - latest
+        - "${DRONE_TAG##v}"
+      repo: &docker_repo quay.io/suzuki_shunsuke/durl
+      registry: quay.io
+      username:
+        from_secret: quayio_username
+      password:
+        from_secret: quayio_password
+    when:
+      event:
+        - tag
+  - name: push/docker
+    image: *docker_plugin
+    settings:
+      repo: *docker_repo
+      registry: quay.io
+      username:
+        from_secret: quayio_username
+      password:
+        from_secret: quayio_password
+    when:
+      event:
+        - push
+  - name: pr/docker
+    image: *docker_plugin
+    settings:
+      repo: *docker_repo
+      registry: quay.io
+      dry_run: true
+    when:
+      event:
+        - pull_request
