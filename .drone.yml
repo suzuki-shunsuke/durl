@@ -59,6 +59,13 @@ steps:
       event:
         - push
         - tag
+  - name: fetch tags
+    image: plugins/git
+    commands:
+      - git fetch --tags
+    when:
+      event:
+        - tag
   - name: goreleaser
     image: *docker_goci
     commands:
