@@ -77,7 +77,7 @@ steps:
   - name: build and release with goreleaser
     image: *docker_goci
     commands:
-      - CIRCLE_TAG="$DRONE_TAG" bash scripts/release.sh
+      - bash scripts/release.sh
     environment:
       GITHUB_TOKEN:
         from_secret: github_token
