@@ -9,7 +9,8 @@
     "gen-mock": "gomic gen && npm run fmt",
     "durl": "bash scripts/durl.sh",
     "image": "docker build -t suzukishunsuke/durl:local .",
-    "ci-local": "circleci build -e LOCAL=true"
+    "ci-local": "circleci build -e LOCAL=true",
+    "drone-exec-local": "drone exec --pipeline build --env-file scripts/drone-local-env --event push"
   },
   "husky": {
     "hooks": {

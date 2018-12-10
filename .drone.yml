@@ -1,0 +1,90 @@
+---
+kind: pipeline
+name: commitlint
+steps:
+  - name: npm install
+    image: &node_image node:10.14.1-alpine
+    commands:
+      - npm i
+  - name: tag/commitlint
+    image: *node_image
+    commands:
+      - npx commitlint --from HEAD~1 --to HEAD
+    when:
+      event:
+        - tag
+        - push
+  - name: pr/commitlint
+    image: *node_image
+    commands:
+      - npx commitlint --from master --to HEAD || exit 1
+    when:
+      event:
+        - pull_request
+---
+kind: pipeline
+name: build
+workspace:
+  base: /go
+  path: src/github.com/suzuki-shunsuke/durl
+steps:
+  - name: dep-dl
+    image: &docker_goci suzukishunsuke/go-ci:1.0.0
+    commands:
+      - dep-dl
+  - name: durl
+    image: *docker_goci
+    commands:
+      - bash scripts/durl.sh
+  - name: go vet
+    image: golang:1.11.2
+    commands:
+      - go vet ./...
+  - name: gometalinter
+    image: *docker_goci
+    commands:
+      - gometalinter ./...
+  - name: go test
+    image: golang:1.11.2
+    commands:
+      - go test -race -covermode=atomic ./...
+    when:
+      event:
+        - pull_request
+  - name: codecov
+    image: golang:1.11.2
+    commands:
+      - bash scripts/codecov-test.sh
+    when:
+      event:
+        - push
+        - tag
+  - name: goreleaser
+    image: *docker_goci
+    commands:
+      - CIRCLE_TAG="$DRONE_TAG" bash scripts/release.sh
+  - name: build and push docker
+    image: &docker_plugin plugins/docker:17.12
+    settings:
+      tags:
+        - latest
+        - "${DRONE_TAG##v}"
+      repo: quay.io/suzuki_shunsuke/durl
+      registry: quay.io
+      username:
+        from_secret: quayio_username
+      password:
+        from_secret: quayio_password
+    when:
+      event:
+        - tag
+  - name: build docker (not push)
+    image: *docker_plugin
+    settings:
+      repo: quay.io/suzuki_shunsuke/durl
+      registry: quay.io
+      dry_run: true
+    when:
+      event:
+        - pull_request
+        - push

@@ -184,7 +184,10 @@ func extractURLsFromFile(ctx context.Context, fsys domain.Fsys, p string) (*strs
 	case <-ctx.Done():
 		return nil, nil
 	case err := <-errChan:
-		return urls, err
+		if err != nil {
+			return urls, errors.Wrapf(err, "failed to read %s", p)
+		}
+		return urls, nil
 	}
 }
 
