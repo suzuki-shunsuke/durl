@@ -55,6 +55,9 @@ steps:
     image: golang:1.11.2
     commands:
       - bash scripts/codecov-test.sh
+    environment:
+      CODECOV_TOKEN:
+        from_secret: codecov_token
     when:
       event:
         - push
