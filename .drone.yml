@@ -69,7 +69,7 @@ steps:
       tags:
         - latest
         - "${DRONE_TAG##v}"
-      repo: &docker_repo quay.io/suzuki_shunsuke/durl
+      repo: quay.io/suzuki_shunsuke/durl
       registry: quay.io
       username:
         from_secret: quayio_username
@@ -81,7 +81,7 @@ steps:
   - name: build docker (not push)
     image: *docker_plugin
     settings:
-      repo: *docker_repo
+      repo: quay.io/suzuki_shunsuke/durl
       registry: quay.io
       dry_run: true
     when:
