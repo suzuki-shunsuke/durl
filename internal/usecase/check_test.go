@@ -8,12 +8,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"gopkg.in/h2non/gock.v1"
 
 	"github.com/scylladb/go-set/strset"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 	"github.com/suzuki-shunsuke/durl/internal/test"
@@ -46,31 +47,31 @@ func TestCheck(t *testing.T) {
 		in       string
 		replies  map[string]int
 		files    map[string]File
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
 		"normal", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
 			"foo.txt":             {[]byte("http://example.com/foo"), nil},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, assert.Nil,
+		}, require.Nil,
 	}, {
 		"ignore url", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
 			"foo.txt":             {[]byte("http://example.com/foo"), nil},
 			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://example.com/foo"]}`), nil},
-		}, assert.Nil,
+		}, require.Nil,
 	}, {
 		"http error", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
 			"foo.txt":             {[]byte("http://example.com/foo"), nil},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, assert.NotNil,
+		}, require.NotNil,
 	}, {
 		"file read error", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
 			"foo.txt":             {nil, fmt.Errorf("failed to read a file")},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, assert.NotNil,
+		}, require.NotNil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -92,18 +93,18 @@ func Test_checkURLs(t *testing.T) {
 		title    string
 		replies  map[string]int
 		urls     map[string]*strset.Set
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
 		"normal", map[string]int{"/foo": 200},
 		map[string]*strset.Set{
 			"http://example.com/foo": strset.New("foo.txt"),
-		}, assert.Nil,
+		}, require.Nil,
 	}, {
 		"error", map[string]int{"/foo": 200, "/bar": 500},
 		map[string]*strset.Set{
 			"http://example.com/foo": strset.New("foo.txt"),
 			"http://example.com/bar": strset.New("bar.txt"),
-		}, assert.NotNil,
+		}, require.NotNil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -126,11 +127,11 @@ func Test_checkURL(t *testing.T) {
 		title    string
 		path     string
 		reply    int
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", "/foo", 200, assert.Nil,
+		"normal", "/foo", 200, require.Nil,
 	}, {
-		"500 error", "/bar", 500, assert.NotNil,
+		"500 error", "/bar", 500, require.NotNil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -150,23 +151,23 @@ func Test_extractURLsFromFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		files    map[string]File
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 		set      map[string]*strset.Set
 	}{{
 		"no url", map[string]File{
 			"foo.txt": {[]byte(`foo`), nil},
-		}, assert.Nil, map[string]*strset.Set{},
+		}, require.Nil, map[string]*strset.Set{},
 	}, {
 		"normal", map[string]File{
 			"foo.txt": {[]byte(`foo`), nil},
 			"bar.txt": {[]byte(`http://example.com`), nil},
-		}, assert.Nil, map[string]*strset.Set{
+		}, require.Nil, map[string]*strset.Set{
 			"http://example.com": strset.New("bar.txt")},
 	}, {
 		"error", map[string]File{
 			"bar.txt": {[]byte(`http://example.com`), nil},
 			"foo.txt": {nil, fmt.Errorf("failed to read a file")},
-		}, assert.NotNil, nil,
+		}, require.NotNil, nil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -178,7 +179,7 @@ func Test_extractURLsFromFiles(t *testing.T) {
 			set, err := extractURLsFromFiles(fsys, files)
 			tt.checkErr(t, err)
 			if err == nil {
-				assert.Equal(t, tt.set, set)
+				require.Equal(t, tt.set, set)
 			}
 		})
 	}
@@ -189,16 +190,18 @@ func Test_extractURLsFromFile(t *testing.T) {
 		title    string
 		buf      []byte
 		err      error
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 		set      *strset.Set
 		p        string
 	}{{
 		"no url", []byte(`foo
-bar`), nil, assert.Nil, strset.New(), "foo.txt",
+bar`), nil, require.Nil, strset.New(), "foo.txt",
 	}, {
-		"normal", []byte(`http://example.com`), nil, assert.Nil, strset.New("http://example.com"), "foo.txt",
+		"normal", []byte(`http://example.com`), nil, require.Nil, strset.New("http://example.com"), "foo.txt",
 	}, {
-		"error", nil, fmt.Errorf("failed to read a file"), assert.NotNil, nil, "foo.txt",
+		"error", nil, fmt.Errorf("failed to read a file"), require.NotNil, nil, "foo.txt",
+	}, {
+		"too long", []byte(strings.Repeat("X", 65536)), nil, require.NotNil, nil, "foo.txt",
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -223,16 +226,16 @@ func Test_getFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		in       string
-		checkErr func(assert.TestingT, interface{}, ...interface{}) bool
+		checkErr func(require.TestingT, interface{}, ...interface{})
 		arr      *strset.Set
 	}{{
 		"normal", `foo
-bar`, assert.Nil, strset.New("foo", "bar"),
+bar`, require.Nil, strset.New("foo", "bar"),
 	}, {
 		"spaces", `
   foo
 bar
-`, assert.Nil, strset.New("foo", "bar"),
+`, require.Nil, strset.New("foo", "bar"),
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
