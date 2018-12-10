@@ -1,8 +1,8 @@
 # durl
 
 [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/suzuki-shunsuke/durl)
-[![CircleCI](https://circleci.com/gh/suzuki-shunsuke/durl.svg?style=svg)](https://circleci.com/gh/suzuki-shunsuke/durl)
 [![Build Status](https://cloud.drone.io/api/badges/suzuki-shunsuke/durl/status.svg)](https://cloud.drone.io/suzuki-shunsuke/durl)
+[![Docker Repository on Quay](https://quay.io/repository/suzuki_shunsuke/durl/status "Docker Repository on Quay")](https://quay.io/repository/suzuki_shunsuke/durl)
 [![codecov](https://codecov.io/gh/suzuki-shunsuke/durl/branch/master/graph/badge.svg)](https://codecov.io/gh/suzuki-shunsuke/durl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/suzuki-shunsuke/durl)](https://goreportcard.com/report/github.com/suzuki-shunsuke/durl)
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/durl.svg)](https://github.com/suzuki-shunsuke/durl)
@@ -41,12 +41,12 @@ For example, you can also check your blog posts with durl.
 
 We provide busybox based docker image installed `durl`.
 
-https://hub.docker.com/r/suzukishunsuke/durl
+https://quay.io/repository/suzuki_shunsuke/durl
 
 You can try to use durl without installation, and this is useful for CI.
 
 ```
-$ docker run -ti --rm -v $PWD:/workspace -w /workspace suzukishunsuke/durl sh
+$ docker run -ti --rm -v $PWD:/workspace -w /workspace quay.io/suzuki_shunsuke/durl sh
 # echo foo.txt | durl check
 ```
 
