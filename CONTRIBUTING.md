@@ -15,7 +15,7 @@
 * [gometalinter](https://github.com/alecthomas/gometalinter)
 * [goreleaser](https://goreleaser.com/)
 * [gomic](https://github.com/suzuki-shunsuke/gomic)
-* [Circle CI CLI](https://github.com/CircleCI-Public/circleci-cli)
+* [drone CLI](https://docs.drone.io/cli/install/)
 
 We use node libraries and npm scripts for development.
 Please see [package.json](https://github.com/suzuki-shunsuke/durl/blob/master/package.json) .
@@ -46,8 +46,8 @@ $ npm run fmt
 
 ```
 $ npm t
-# Test with circle ci
-# https://circleci.com/docs/2.0/local-cli/
+# Test with drone ci
+# https://docs.drone.io/cli/drone-exec/
 $ npm run ci-local
 ```
 
@@ -81,6 +81,6 @@ When we push a tag to GitHub, ci is run and durl is built and uploaded to [GitHu
 
 ## CI
 
-We use [Circle CI](https://circleci.com/gh/suzuki-shunsuke/durl).
+We use [drone cloud](https://cloud.drone.io/suzuki-shunsuke/durl).
 
-Please see [.circleci/config.yml](https://github.com/suzuki-shunsuke/durl/blob/master/.circleci/config.yml) .
+Please see [.drone.yml](https://github.com/suzuki-shunsuke/durl/blob/master/.drone.yml) .
