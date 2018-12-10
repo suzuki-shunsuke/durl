@@ -5,3 +5,4 @@ vendor
 coverage.txt
 /*.txt
 /.git-rm-branch.yml
+/dist
