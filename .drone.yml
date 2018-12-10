@@ -44,15 +44,26 @@ steps:
     image: *docker_goci
     commands:
       - gometalinter ./...
+  - name: go test
+    image: golang:1.11.2
+    commands:
+      - go test -race -covermode=atomic ./...
+    when:
+      event:
+        - pull_request
   - name: codecov
     image: golang:1.11.2
     commands:
       - bash scripts/codecov-test.sh
+    when:
+      event:
+        - push
+        - tag
   - name: goreleaser
     image: *docker_goci
     commands:
       - CIRCLE_TAG="$DRONE_TAG" bash scripts/release.sh
-  - name: tag/docker
+  - name: build and push docker
     image: &docker_plugin plugins/docker:17.12
     settings:
       tags:
@@ -67,19 +78,7 @@ steps:
     when:
       event:
         - tag
-  - name: push/docker
-    image: *docker_plugin
-    settings:
-      repo: *docker_repo
-      registry: quay.io
-      username:
-        from_secret: quayio_username
-      password:
-        from_secret: quayio_password
-    when:
-      event:
-        - push
-  - name: pr/docker
+  - name: build docker (not push)
     image: *docker_plugin
     settings:
       repo: *docker_repo
@@ -88,3 +87,4 @@ steps:
     when:
       event:
         - pull_request
+        - push
