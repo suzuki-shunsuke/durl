@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
 
 	"github.com/suzuki-shunsuke/durl/internal/infra"
@@ -28,9 +29,9 @@ var CheckCommand = cli.Command{
 func check(c *cli.Context) error {
 	cfgPath := c.String("config")
 	if terminal.IsTerminal(0) {
-		return wrapUsecase(
+		return cliutil.ConvErrToExitError(
 			usecase.Check(infra.Fsys{}, nil, cfgPath))
 	}
-	return wrapUsecase(
+	return cliutil.ConvErrToExitError(
 		usecase.Check(infra.Fsys{}, os.Stdin, cfgPath))
 }
