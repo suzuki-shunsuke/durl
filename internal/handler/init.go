@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/urfave/cli"
 
+	"github.com/suzuki-shunsuke/go-cliutil"
+
 	"github.com/suzuki-shunsuke/durl/internal/infra"
 	"github.com/suzuki-shunsuke/durl/internal/usecase"
 )
@@ -23,5 +25,6 @@ var InitCommand = cli.Command{
 
 // initCmd is the sub command "init".
 func initCmd(c *cli.Context) error {
-	return wrapUsecase(usecase.Init(infra.Fsys{}, c.String("dest")))
+	return cliutil.ConvErrToExitError(
+		usecase.Init(infra.Fsys{}, c.String("dest")))
 }

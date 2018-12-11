@@ -45,6 +45,14 @@
   version = "v1.2.2"
 
 [[projects]]
+  digest = "1:f06127e7a8bec1773db2662318b7fbe988b158da748d119b6a70572f81e68ef3"
+  name = "github.com/suzuki-shunsuke/go-cliutil"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "27c6eb3d0965fbd5407bb211bc08733d6f71944d"
+  version = "0.1.0"
+
+[[projects]]
   digest = "1:121e4109d810ade2e3917f6d322e3b4b8a2520ba89b2a6e1db975e0718a840eb"
   name = "github.com/suzuki-shunsuke/gomic"
   packages = ["gomic"]
@@ -118,6 +126,7 @@
     "github.com/pkg/errors",
     "github.com/scylladb/go-set/strset",
     "github.com/stretchr/testify/require",
+    "github.com/suzuki-shunsuke/go-cliutil",
     "github.com/suzuki-shunsuke/gomic/gomic",
     "github.com/urfave/cli",
     "golang.org/x/crypto/ssh/terminal",

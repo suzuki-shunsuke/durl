@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 
 	"golang.org/x/sync/errgroup"
 
@@ -16,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/scylladb/go-set/strset"
+	"github.com/suzuki-shunsuke/go-cliutil"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
@@ -46,16 +46,7 @@ func findCfg(fsys domain.Fsys) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for {
-		p := filepath.Join(wd, ".durl.yml")
-		if fsys.Exist(p) {
-			return p, nil
-		}
-		if wd == "/" || wd == "" {
-			return "", fmt.Errorf(".durl.yml is not found")
-		}
-		wd = filepath.Dir(wd)
-	}
+	return cliutil.FindFile(wd, ".durl.yml", fsys.Exist)
 }
 
 func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
