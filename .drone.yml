@@ -88,7 +88,7 @@ steps:
       event:
         - tag
   - name: build and push docker
-    image: &docker_plugin plugins/docker:17.12
+    image: &docker_plugin plugins/docker:18.09.0
     settings:
       tags:
         - latest
