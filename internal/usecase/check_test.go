@@ -99,6 +99,7 @@ func Test_isIgnoredURL(t *testing.T) {
 		{"https://example.com", true, domain.Cfg{}},
 		{"https://localhost.com", false, domain.Cfg{}},
 		{"https://localhost.com", true, domain.Cfg{IgnoreURLs: []string{"https://localhost.com"}}},
+		{"https://localhost.com", true, domain.Cfg{IgnoreHosts: []string{"localhost.com"}}},
 		{"https://localhost", true, domain.Cfg{}},
 		{"http://localhost", true, domain.Cfg{}},
 		{"http://localhost:8000", true, domain.Cfg{}},

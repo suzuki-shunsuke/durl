@@ -109,6 +109,8 @@ find . \
 ---
 ignore_urls:
   - https://github.com/suzuki-shunsuke/ignore-repository
+ignore_hosts:
+  - localhost.com
 ```
 
 ## Change Log

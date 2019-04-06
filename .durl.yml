@@ -4,7 +4,8 @@
 ignore_urls:
   - http://example.com/foo
   - http://example.com/bar
-  - https://localhost.com
   - https://github.com/suzuki-shunsuke/durl/releases/download/v${DURL_VERSION}/durl_${DURL_VERSION}_linux_amd64.tar.gz
   - https://github.com/suzuki-shunsuke/dead-repository
   - https://github.com/suzuki-shunsuke/ignore-repository
+ignore_hosts:
+  - localhost.com
