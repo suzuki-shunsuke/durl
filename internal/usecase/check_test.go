@@ -87,6 +87,26 @@ func TestCheck(t *testing.T) {
 	}
 }
 
+func Test_isIgnoredURL(t *testing.T) {
+	data := []struct {
+		url string
+		exp bool
+	}{
+		{"example.com", true},
+		{"ldap://example.com", true},
+		{"https://localhost.com", false},
+	}
+	for _, d := range data {
+		u, err := url.Parse(d.url)
+		require.Nil(t, err)
+		if d.exp {
+			require.True(t, isIgnoredURL(u), d.url)
+			continue
+		}
+		require.False(t, isIgnoredURL(u), d.url)
+	}
+}
+
 func Test_checkURLs(t *testing.T) {
 	defer gock.Off()
 	data := []struct {

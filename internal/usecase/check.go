@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"golang.org/x/sync/errgroup"
 
@@ -38,10 +39,31 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	if err != nil {
 		return err
 	}
+	// filter url
+	for u := range urls {
+		uri, err := url.Parse(u)
+		// ignore url if it is failed to parse the url
+		if err != nil {
+			delete(urls, u)
+			continue
+		}
+		if isIgnoredURL(uri) {
+			delete(urls, u)
+			continue
+		}
+	}
+
 	for _, u := range cfg.IgnoreURLs {
 		delete(urls, u)
 	}
 	return checkURLs(urls)
+}
+
+func isIgnoredURL(u *url.URL) bool {
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return true
+	}
+	return false
 }
 
 func findCfg(fsys domain.Fsys) (string, error) {
