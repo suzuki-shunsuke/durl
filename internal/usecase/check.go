@@ -27,10 +27,13 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 		return err
 	}
 
+	// get file paths
 	files, err := getFiles(stdin)
 	if err != nil {
 		return err
 	}
+	// urls is a map whose key is url and value is file paths which include the url
+	// url -> file paths
 	urls, err := extractURLsFromFiles(fsys, files)
 	if err != nil {
 		return err
@@ -111,11 +114,12 @@ func checkURL(ctx context.Context, client http.Client, u string) error {
 }
 
 func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {
+	// return a map whose key is url and value is file paths which include the url
 	size := files.Size()
 	if size == 0 {
 		return nil, nil
 	}
-	// extract urls
+	// extract urls from all files
 	type (
 		File struct {
 			path string
@@ -126,6 +130,7 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 	eg, ctx := errgroup.WithContext(context.Background())
 	files.Each(func(p string) bool {
 		eg.Go(func() error {
+			// open a file and extract urls from it
 			arr, err := extractURLsFromFile(ctx, fsys, p)
 			if err != nil {
 				return err
@@ -138,7 +143,9 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 	if err := eg.Wait(); err != nil {
 		return nil, err
 	}
+
 	close(urlsChan)
+	// url -> file paths
 	urls := map[string]*strset.Set{}
 	for f := range urlsChan {
 		f.urls.Each(func(u string) bool {
@@ -155,18 +162,22 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 }
 
 func extractURLsFromFile(ctx context.Context, fsys domain.Fsys, p string) (*strset.Set, error) {
+	// open a file and extract urls from it
 	urls := strset.New()
 	errChan := make(chan error, 1)
 	reg := xurls.Strict()
 	go func() {
+		// open a file
 		fi, err := fsys.Open(p)
 		if err != nil {
 			errChan <- err
 			return
 		}
 		defer fi.Close()
+		// read a file per a line
 		scanner := bufio.NewScanner(fi)
 		for scanner.Scan() {
+			// extract urls from a line
 			urls.Add(reg.FindAllString(scanner.Text(), -1)...)
 		}
 		errChan <- scanner.Err()
