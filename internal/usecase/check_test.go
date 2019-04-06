@@ -91,22 +91,24 @@ func Test_isIgnoredURL(t *testing.T) {
 	data := []struct {
 		url string
 		exp bool
+		cfg domain.Cfg
 	}{
-		{"example.com", true},
-		{"ldap://example.com", true},
-		{"http://example.com", true},
-		{"https://example.com", true},
-		{"https://localhost.com", false},
-		{"https://localhost", true},
-		{"http://localhost", true},
-		{"http://localhost:8000", true},
+		{"example.com", true, domain.Cfg{}},
+		{"ldap://example.com", true, domain.Cfg{}},
+		{"http://example.com", true, domain.Cfg{}},
+		{"https://example.com", true, domain.Cfg{}},
+		{"https://localhost.com", false, domain.Cfg{}},
+		{"https://localhost.com", true, domain.Cfg{IgnoreURLs: []string{"https://localhost.com"}}},
+		{"https://localhost", true, domain.Cfg{}},
+		{"http://localhost", true, domain.Cfg{}},
+		{"http://localhost:8000", true, domain.Cfg{}},
 	}
 	for _, d := range data {
 		if d.exp {
-			require.True(t, isIgnoredURL(d.url), d.url)
+			require.True(t, isIgnoredURL(d.url, d.cfg), d.url)
 			continue
 		}
-		require.False(t, isIgnoredURL(d.url), d.url)
+		require.False(t, isIgnoredURL(d.url, d.cfg), d.url)
 	}
 }
 

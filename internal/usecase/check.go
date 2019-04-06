@@ -42,19 +42,15 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	}
 	// filter url
 	for u := range urls {
-		if isIgnoredURL(u) {
+		if isIgnoredURL(u, cfg) {
 			delete(urls, u)
-			continue
 		}
 	}
 
-	for _, u := range cfg.IgnoreURLs {
-		delete(urls, u)
-	}
 	return checkURLs(urls)
 }
 
-func isIgnoredURL(uri string) bool {
+func isIgnoredURL(uri string, cfg domain.Cfg) bool {
 	u, err := url.Parse(uri)
 	if err != nil {
 		// ignore url if it is failed to parse the url
@@ -66,6 +62,11 @@ func isIgnoredURL(uri string) bool {
 	}
 	for _, ignoreHost := range domain.IgnoreHosts {
 		if u.Host == ignoreHost || strings.HasPrefix(u.Host, fmt.Sprintf("%s:", ignoreHost)) {
+			return true
+		}
+	}
+	for _, u := range cfg.IgnoreURLs {
+		if uri == u {
 			return true
 		}
 	}
