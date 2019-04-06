@@ -33,6 +33,12 @@ It is good to use this tool at CI.
 Of course, you can use durl other than oss documents.
 For example, you can also check your blog posts with durl.
 
+## Overview
+
+`durl` accepts file paths as stdin and extracts urls in the files and checks whether they are dead.
+`durl` sends the http requests to all urls and checks the http status code.
+If the status code isn't 2xx, `durl` treats the url is dead and outputs the file path and url and http status code.
+
 ## Install
 
 `durl` is written with Golang and binary is distributed at [release page](https://github.com/suzuki-shunsuke/durl/releases), so installation is easy.
