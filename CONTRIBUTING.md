@@ -12,7 +12,7 @@
 * [npm](https://www.npmjs.com/)
 * [Golang](https://golang.org/)
 * [dep](https://golang.github.io/dep/)
-* [gometalinter](https://github.com/alecthomas/gometalinter)
+* [golangci-lint](https://github.com/golangci/golangci-lint)
 * [goreleaser](https://goreleaser.com/)
 * [gomic](https://github.com/suzuki-shunsuke/gomic)
 * [drone CLI](https://docs.drone.io/cli/install/)
@@ -32,7 +32,7 @@ $ dep ensure
 ```
 # Lint with go vet.
 $ npm run vet
-# Lint with gometalinter. It takes some time.
+# Lint with golangci-lint
 $ npm run lint
 ```
 

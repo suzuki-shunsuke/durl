@@ -40,10 +40,10 @@ steps:
     image: golang:1.11.2
     commands:
       - go vet ./...
-  - name: gometalinter
-    image: *docker_goci
+  - name: golangci-lint
+    image: golangci/golangci-lint:v1.15
     commands:
-      - gometalinter ./...
+      - golangci-lint run
   - name: go test
     image: golang:1.11.2
     commands:
