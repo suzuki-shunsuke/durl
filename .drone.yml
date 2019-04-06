@@ -41,7 +41,7 @@ steps:
     commands:
       - go vet ./...
   - name: golangci-lint
-    image: golangci/golangci-lint:v1.15
+    image: golangci/golangci-lint:v1.16.0
     commands:
       - golangci-lint run
   - name: go test
