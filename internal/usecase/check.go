@@ -70,6 +70,11 @@ func isIgnoredURL(uri string, cfg domain.Cfg) bool {
 			return true
 		}
 	}
+	for _, h := range cfg.IgnoreHosts {
+		if u.Host == h {
+			return true
+		}
+	}
 	return false
 }
 
