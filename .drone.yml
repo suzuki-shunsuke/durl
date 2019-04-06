@@ -3,7 +3,7 @@ kind: pipeline
 name: commitlint
 steps:
   - name: npm install
-    image: &node_image node:10.14.1-alpine
+    image: &node_image node:10.15.3-alpine
     commands:
       - npm i
   - name: tag/commitlint
@@ -37,22 +37,22 @@ steps:
     commands:
       - bash scripts/durl.sh
   - name: go vet
-    image: golang:1.11.2
+    image: &image_go golang:1.12.2
     commands:
       - go vet ./...
   - name: golangci-lint
-    image: golangci/golangci-lint:v1.15
+    image: golangci/golangci-lint:v1.16.0
     commands:
       - golangci-lint run
   - name: go test
-    image: golang:1.11.2
+    image: *image_go
     commands:
       - go test -race -covermode=atomic ./...
     when:
       event:
         - pull_request
   - name: codecov
-    image: golang:1.11.2
+    image: *image_go
     commands:
       - bash scripts/codecov-test.sh
     environment:
@@ -88,7 +88,7 @@ steps:
       event:
         - tag
   - name: build and push docker
-    image: &docker_plugin plugins/docker:17.12
+    image: &docker_plugin plugins/docker:18.09.0
     settings:
       tags:
         - latest
