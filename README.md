@@ -88,6 +88,10 @@ find . \
   durl check || exit 1
 ```
 
+## Ignore urls
+
+* [check only urls whose scheme are "http" or "https"](https://github.com/suzuki-shunsuke/durl/issues/10)
+
 ## Configuration
 
 ```yaml
