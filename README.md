@@ -12,11 +12,14 @@
 CLI tool to check whether dead urls are included in files.
 
 * [Motivation](#motivation)
+* [Overview](#overview)
 * [Install](#install)
 * [Docker Image](#docker-image)
 * [Getting Started](#getting-started)
+* [Ignore urls](#ignore-urls)
 * [Configuration](#configuration)
 * [Change Log](https://github.com/suzuki-shunsuke/durl/releases)
+* [Contributing](CONTRIBUTING.md)
 
 ## Motivation
 
@@ -38,6 +41,8 @@ For example, you can also check your blog posts with durl.
 `durl` accepts file paths as stdin and extracts urls in the files and checks whether they are dead.
 `durl` sends the http requests to all urls and checks the http status code.
 If the status code isn't 2xx, `durl` treats the url is dead and outputs the file path and url and http status code.
+
+Note that `durl` can't detect dead anchors such as https://github.com/suzuki-shunsuke/durl#hoge .
 
 ## Install
 
