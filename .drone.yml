@@ -3,7 +3,7 @@ kind: pipeline
 name: commitlint
 steps:
   - name: npm install
-    image: &node_image node:10.14.1-alpine
+    image: &node_image node:10.15.3-alpine
     commands:
       - npm i
   - name: tag/commitlint
