@@ -63,7 +63,6 @@ Generate a file included dead url.
 
 ```
 $ cat << EOF > bar.txt
-heredoc> foo
 https://github.com/suzuki-shunsuke/durl
 Please see https://github.com/suzuki-shunsuke/dead-repository .
 EOF
@@ -73,8 +72,8 @@ Then check the file with `durl check`.
 `durl check` accepts file paths as stdin.
 
 ```
-$ echo foo.txt | durl check
-[foo.txt] https://github.com/suzuki-shunsuke/dead-repository is dead (404)
+$ echo bar.txt | durl check
+[bar.txt] https://github.com/suzuki-shunsuke/dead-repository is dead (404)
 ```
 
 It is good to use `durl` combining with the `find` command.
