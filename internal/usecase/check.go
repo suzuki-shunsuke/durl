@@ -135,7 +135,7 @@ func checkURL(ctx context.Context, client http.Client, u string) error {
 	}
 	resp.Body.Close()
 	// check status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode/100 != 2 {
 		return fmt.Errorf("%s is dead (%d)", u, resp.StatusCode)
 	}
 	return nil
