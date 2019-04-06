@@ -64,8 +64,8 @@ Generate a file included dead url.
 ```
 $ cat << EOF > bar.txt
 heredoc> foo
-http://example.com
-Please see http://example.com/bar .
+https://github.com/suzuki-shunsuke/durl
+Please see https://github.com/suzuki-shunsuke/dead-repository .
 EOF
 ```
 
@@ -74,7 +74,7 @@ Then check the file with `durl check`.
 
 ```
 $ echo foo.txt | durl check
-[foo.txt] http://example.com/bar is dead (404)
+[foo.txt] https://github.com/suzuki-shunsuke/dead-repository is dead (404)
 ```
 
 It is good to use `durl` combining with the `find` command.
@@ -91,13 +91,14 @@ find . \
 ## Ignore urls
 
 * [check only urls whose scheme are "http" or "https"](https://github.com/suzuki-shunsuke/durl/issues/10)
+* [ignore urls whose host matches the black list (ex. "localhost", "example.com")](https://github.com/suzuki-shunsuke/durl/issues/11)
 
 ## Configuration
 
 ```yaml
 ---
 ignore_urls:
-  - http://example.com/bar
+  - https://github.com/suzuki-shunsuke/ignore-repository
 ```
 
 ## Change Log

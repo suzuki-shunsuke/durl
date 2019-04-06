@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 
@@ -62,6 +63,11 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 func isIgnoredURL(u *url.URL) bool {
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return true
+	}
+	for _, ignoreHost := range domain.IgnoreHosts {
+		if u.Host == ignoreHost || strings.HasPrefix(u.Host, fmt.Sprintf("%s:", ignoreHost)) {
+			return true
+		}
 	}
 	return false
 }

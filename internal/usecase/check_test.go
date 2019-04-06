@@ -51,19 +51,19 @@ func TestCheck(t *testing.T) {
 	}{{
 		"normal", "foo.txt", map[string]int{"/foo": 200},
 		map[string]File{
-			"foo.txt":             {[]byte("http://example.com/foo"), nil},
+			"foo.txt":             {[]byte("http://github.com/foo"), nil},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, require.Nil,
 	}, {
 		"ignore url", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
-			"foo.txt":             {[]byte("http://example.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://example.com/foo"]}`), nil},
+			"foo.txt":             {[]byte("http://github.com/foo"), nil},
+			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://github.com/foo"]}`), nil},
 		}, require.Nil,
 	}, {
 		"http error", "foo.txt", map[string]int{"/foo": 500},
 		map[string]File{
-			"foo.txt":             {[]byte("http://example.com/foo"), nil},
+			"foo.txt":             {[]byte("http://github.com/foo"), nil},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
 		}, require.NotNil,
 	}, {
@@ -75,7 +75,7 @@ func TestCheck(t *testing.T) {
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			g := gock.New("http://example.com")
+			g := gock.New("http://github.com")
 			for p, c := range tt.replies {
 				g.Get(p).Reply(c)
 			}
@@ -94,7 +94,12 @@ func Test_isIgnoredURL(t *testing.T) {
 	}{
 		{"example.com", true},
 		{"ldap://example.com", true},
+		{"http://example.com", true},
+		{"https://example.com", true},
 		{"https://localhost.com", false},
+		{"https://localhost", true},
+		{"http://localhost", true},
+		{"http://localhost:8000", true},
 	}
 	for _, d := range data {
 		u, err := url.Parse(d.url)

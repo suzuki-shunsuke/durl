@@ -16,3 +16,7 @@ ignore_urls:
 - https://github.com/suzuki-shunsuke/durl
 `
 )
+
+var (
+	IgnoreHosts = []string{"localhost", "example.com", "example.org", "example.net"}
+)
