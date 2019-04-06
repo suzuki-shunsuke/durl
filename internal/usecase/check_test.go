@@ -102,13 +102,11 @@ func Test_isIgnoredURL(t *testing.T) {
 		{"http://localhost:8000", true},
 	}
 	for _, d := range data {
-		u, err := url.Parse(d.url)
-		require.Nil(t, err)
 		if d.exp {
-			require.True(t, isIgnoredURL(u), d.url)
+			require.True(t, isIgnoredURL(d.url), d.url)
 			continue
 		}
-		require.False(t, isIgnoredURL(u), d.url)
+		require.False(t, isIgnoredURL(d.url), d.url)
 	}
 }
 

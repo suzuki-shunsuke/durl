@@ -42,13 +42,7 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	}
 	// filter url
 	for u := range urls {
-		uri, err := url.Parse(u)
-		// ignore url if it is failed to parse the url
-		if err != nil {
-			delete(urls, u)
-			continue
-		}
-		if isIgnoredURL(uri) {
+		if isIgnoredURL(u) {
 			delete(urls, u)
 			continue
 		}
@@ -60,7 +54,13 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 	return checkURLs(urls)
 }
 
-func isIgnoredURL(u *url.URL) bool {
+func isIgnoredURL(uri string) bool {
+	u, err := url.Parse(uri)
+	if err != nil {
+		// ignore url if it is failed to parse the url
+		return true
+	}
+
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return true
 	}
