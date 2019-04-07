@@ -126,14 +126,21 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
 	}
+	if cfg.MaxRequestCount == 0 {
+		cfg.MaxRequestCount = 10
+	}
+	semaphore := make(chan struct{}, cfg.MaxRequestCount)
 	for u, files := range urls {
 		// https://golang.org/doc/faq#closures_and_goroutines
 		u := u
 		files := files
 		eg.Go(func() error {
+			semaphore <- struct{}{}
 			if err := checkURL(ctx, cfg, client, u); err != nil {
+				<-semaphore
 				return errors.Wrap(err, files.String())
 			}
+			<-semaphore
 			return nil
 		})
 	}
