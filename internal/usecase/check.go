@@ -156,7 +156,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 		}()
 	}
 	endCount := len(urls)
-	failedCount := 5
+	failedCount := cfg.MaxFailedRequestCount
 	for {
 		select {
 		case b := <-resultChan:
@@ -165,7 +165,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 				failedCount--
 			}
 			if endCount == 0 {
-				if failedCount != 5 {
+				if failedCount != cfg.MaxFailedRequestCount {
 					return fmt.Errorf("")
 				}
 				return nil
