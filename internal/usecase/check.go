@@ -136,7 +136,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 		cfg.MaxRequestCount = domain.DefaultMaxRequestCount
 	}
 	semaphore := make(chan struct{}, cfg.MaxRequestCount)
-	resultChan := make(chan bool, len(urls))
+	resultChan := make(chan error, len(urls))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for u, files := range urls {
@@ -148,21 +148,21 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 			err := checkURL(ctx, cfg, client, u)
 			<-semaphore
 			if err == nil {
-				resultChan <- true
+				resultChan <- nil
 				return
 			}
-			fmt.Fprintf(os.Stderr, "failed to check a url: %s %s: %s\n", u, files.String(), err)
-			resultChan <- false
+			resultChan <- errors.Wrapf(err, "failed to check a url: %s %s", u, files.String())
 		}()
 	}
 	endCount := len(urls)
 	failedCount := cfg.MaxFailedRequestCount
 	for {
 		select {
-		case b := <-resultChan:
+		case err := <-resultChan:
 			endCount--
-			if !b {
+			if err != nil {
 				failedCount--
+				fmt.Fprintln(os.Stderr, err)
 			}
 			if endCount == 0 {
 				if failedCount != cfg.MaxFailedRequestCount {
