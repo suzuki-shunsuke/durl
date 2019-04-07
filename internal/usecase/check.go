@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"golang.org/x/sync/errgroup"
@@ -198,7 +199,9 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 			// open a file and extract urls from it
 			arr, err := extractURLsFromFile(ctx, fsys, p)
 			if err != nil {
-				return err
+				// https://github.com/suzuki-shunsuke/durl/issues/27
+				fmt.Fprintf(os.Stderr, "failed to extract urls from a file %s: %s\n", p, err)
+				return nil
 			}
 			urlsChan <- File{path: p, urls: arr}
 			return nil

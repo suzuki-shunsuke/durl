@@ -71,7 +71,7 @@ func TestCheck(t *testing.T) {
 		map[string]File{
 			"foo.txt":             {nil, fmt.Errorf("failed to read a file")},
 			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.NotNil,
+		}, require.Nil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
@@ -197,7 +197,8 @@ func Test_extractURLsFromFiles(t *testing.T) {
 		"error", map[string]File{
 			"bar.txt": {[]byte(`http://example.com`), nil},
 			"foo.txt": {nil, fmt.Errorf("failed to read a file")},
-		}, require.NotNil, nil,
+		}, require.Nil, map[string]*strset.Set{
+			"http://example.com": strset.New("bar.txt")},
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
