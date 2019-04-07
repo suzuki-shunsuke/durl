@@ -140,10 +140,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for u, files := range urls {
-		// https://golang.org/doc/faq#closures_and_goroutines
-		u := u
-		files := files
-		go func() {
+		go func(u string, files *strset.Set) {
 			semaphore <- struct{}{}
 			err := checkURL(ctx, cfg, client, u)
 			<-semaphore
@@ -152,7 +149,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 				return
 			}
 			resultChan <- errors.Wrapf(err, "failed to check a url: %s %s", u, files.String())
-		}()
+		}(u, files)
 	}
 	endCount := len(urls)
 	failedCount := cfg.MaxFailedRequestCount
