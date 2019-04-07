@@ -129,8 +129,8 @@ func checkURLs(urls map[string]*strset.Set) error {
 	return eg.Wait()
 }
 
-func checkURL(ctx context.Context, client http.Client, u string) error {
-	req, err := http.NewRequest(http.MethodGet, u, nil)
+func checkURLWithMethod(ctx context.Context, client http.Client, u, method string) error {
+	req, err := http.NewRequest(method, u, nil)
 	if err != nil {
 		return err
 	}
@@ -145,6 +145,13 @@ func checkURL(ctx context.Context, client http.Client, u string) error {
 		return fmt.Errorf("%s is dead (%d)", u, resp.StatusCode)
 	}
 	return nil
+}
+
+func checkURL(ctx context.Context, client http.Client, u string) error {
+	if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+		return nil
+	}
+	return checkURLWithMethod(ctx, client, u, http.MethodGet)
 }
 
 func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {

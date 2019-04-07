@@ -77,7 +77,7 @@ func TestCheck(t *testing.T) {
 		t.Run(tt.title, func(t *testing.T) {
 			g := gock.New("http://github.com")
 			for p, c := range tt.replies {
-				g.Get(p).Reply(c)
+				g.Head(p).Reply(c)
 			}
 			fsys := newFsys(t, tt.files).
 				SetReturnGetwd("/home/foo", nil).
@@ -136,7 +136,7 @@ func Test_checkURLs(t *testing.T) {
 		t.Run(tt.title, func(t *testing.T) {
 			g := gock.New("http://example.com")
 			for p, c := range tt.replies {
-				g.Get(p).Reply(c)
+				g.Head(p).Reply(c)
 			}
 			tt.checkErr(t, checkURLs(tt.urls))
 		})
@@ -167,7 +167,7 @@ func Test_checkURL(t *testing.T) {
 			}
 			host.Path = tt.path
 			gock.New("http://example.com").
-				Get(tt.path).Reply(tt.reply)
+				Head(tt.path).Reply(tt.reply)
 			tt.checkErr(t, checkURL(context.Background(), client, host.String()))
 		})
 	}
