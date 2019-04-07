@@ -2,7 +2,7 @@ package domain
 
 const (
 	// DefaultTimeout is a default timeout of http request.
-	DefaultTimeout = 60
+	DefaultTimeout = 10
 	// DefaultMaxRequestCount is a default max parallel http request count.
 	DefaultMaxRequestCount = 10
 	// CfgTpl is a template of configuration file.
