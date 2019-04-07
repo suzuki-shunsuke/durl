@@ -126,7 +126,6 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	if len(urls) == 0 {
 		return nil
 	}
-	eg, ctx := errgroup.WithContext(context.Background())
 	if cfg.HTTPRequestTimeout == 0 {
 		cfg.HTTPRequestTimeout = domain.DefaultTimeout
 	}
@@ -137,21 +136,45 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 		cfg.MaxRequestCount = domain.DefaultMaxRequestCount
 	}
 	semaphore := make(chan struct{}, cfg.MaxRequestCount)
+	resultChan := make(chan bool, len(urls))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	for u, files := range urls {
 		// https://golang.org/doc/faq#closures_and_goroutines
 		u := u
 		files := files
-		eg.Go(func() error {
+		go func() {
 			semaphore <- struct{}{}
-			if err := checkURL(ctx, cfg, client, u); err != nil {
-				<-semaphore
-				return errors.Wrap(err, files.String())
-			}
+			err := checkURL(ctx, cfg, client, u)
 			<-semaphore
-			return nil
-		})
+			if err == nil {
+				resultChan <- true
+				return
+			}
+			fmt.Fprintf(os.Stderr, "failed to check a url: %s %s: %s\n", u, files.String(), err)
+			resultChan <- false
+		}()
 	}
-	return eg.Wait()
+	endCount := len(urls)
+	failedCount := 5
+	for {
+		select {
+		case b := <-resultChan:
+			endCount--
+			if !b {
+				failedCount--
+			}
+			if endCount == 0 {
+				if failedCount != 5 {
+					return fmt.Errorf("")
+				}
+				return nil
+			}
+			if failedCount == -1 {
+				return fmt.Errorf("too many urls are dead")
+			}
+		}
+	}
 }
 
 func checkURLWithMethod(ctx context.Context, client http.Client, u, method string) error {
