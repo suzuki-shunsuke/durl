@@ -77,7 +77,7 @@ func TestCheck(t *testing.T) {
 		t.Run(tt.title, func(t *testing.T) {
 			g := gock.New("http://github.com")
 			for p, c := range tt.replies {
-				g.Get(p).Reply(c)
+				g.Head(p).Reply(c)
 			}
 			fsys := newFsys(t, tt.files).
 				SetReturnGetwd("/home/foo", nil).
@@ -132,13 +132,14 @@ func Test_checkURLs(t *testing.T) {
 			"http://example.com/bar": strset.New("bar.txt"),
 		}, require.NotNil,
 	}}
+	cfg := domain.Cfg{HTTPMethod: "head,get"}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
 			g := gock.New("http://example.com")
 			for p, c := range tt.replies {
-				g.Get(p).Reply(c)
+				g.Head(p).Reply(c)
 			}
-			tt.checkErr(t, checkURLs(tt.urls))
+			tt.checkErr(t, checkURLs(cfg, tt.urls))
 		})
 	}
 }
@@ -159,17 +160,20 @@ func Test_checkURL(t *testing.T) {
 	}, {
 		"500 error", "/bar", 500, require.NotNil,
 	}}
-	for _, tt := range data {
-		t.Run(tt.title, func(t *testing.T) {
-			host, err := url.Parse("http://example.com")
-			if err != nil {
-				t.Fatal(err)
-			}
-			host.Path = tt.path
-			gock.New("http://example.com").
-				Get(tt.path).Reply(tt.reply)
-			tt.checkErr(t, checkURL(context.Background(), client, host.String()))
-		})
+	for _, m := range []string{"", "head,get", "get"} {
+		cfg := domain.Cfg{HTTPMethod: m}
+		for _, tt := range data {
+			t.Run(tt.title, func(t *testing.T) {
+				host, err := url.Parse("http://example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+				host.Path = tt.path
+				gock.New("http://example.com").
+					Get(tt.path).Reply(tt.reply)
+				tt.checkErr(t, checkURL(context.Background(), cfg, client, host.String()))
+			})
+		}
 	}
 }
 

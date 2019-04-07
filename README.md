@@ -111,7 +111,14 @@ ignore_urls:
   - https://github.com/suzuki-shunsuke/ignore-repository
 ignore_hosts:
   - localhost.com
+http_method: head,get
 ```
+
+`http_method` is the HTTP method used to check urls.
+
+* "head,get", "" (default): check by HEAD method and if it is failure check by GET method
+* "get": the GET method
+* "head": the HEAD method
 
 ## Change Log
 
