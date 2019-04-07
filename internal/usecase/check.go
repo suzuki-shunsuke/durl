@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -123,11 +124,14 @@ func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
 
 func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	eg, ctx := errgroup.WithContext(context.Background())
+	if cfg.HTTPRequestTimeout == 0 {
+		cfg.HTTPRequestTimeout = domain.DefaultTimeout
+	}
 	client := http.Client{
-		Timeout: domain.DefaultTimeout,
+		Timeout: domain.DefaultTimeout * time.Second,
 	}
 	if cfg.MaxRequestCount == 0 {
-		cfg.MaxRequestCount = 10
+		cfg.MaxRequestCount = domain.DefaultMaxRequestCount
 	}
 	semaphore := make(chan struct{}, cfg.MaxRequestCount)
 	for u, files := range urls {
