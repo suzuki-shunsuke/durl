@@ -1,12 +1,10 @@
 package domain
 
-import (
-	"time"
-)
-
 const (
 	// DefaultTimeout is a default timeout of http request.
-	DefaultTimeout = 60 * time.Second
+	DefaultTimeout = 60
+	// DefaultMaxRequestCount is a default max parallel http request count.
+	DefaultMaxRequestCount = 10
 	// CfgTpl is a template of configuration file.
 	CfgTpl = `
 ---
@@ -17,6 +15,7 @@ ignore_urls:
 ignore_hosts: []
 http_method: head,get
 max_request_count: 10
+http_request_timeout: 10
 `
 )
 
