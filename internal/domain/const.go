@@ -16,6 +16,7 @@ ignore_urls:
 - https://github.com/suzuki-shunsuke/durl
 ignore_hosts: []
 http_method: head,get
+max_request_count: 10
 `
 )
 
