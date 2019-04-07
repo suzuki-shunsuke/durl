@@ -14,6 +14,8 @@ const (
 # https://github.com/suzuki-shunsuke/durl
 ignore_urls:
 - https://github.com/suzuki-shunsuke/durl
+ignore_hosts: []
+http_method: head,get
 `
 )
 

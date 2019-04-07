@@ -47,7 +47,7 @@ func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
 		}
 	}
 
-	return checkURLs(urls)
+	return checkURLs(cfg, urls)
 }
 
 func isIgnoredURL(uri string, cfg domain.Cfg) bool {
@@ -87,7 +87,9 @@ func findCfg(fsys domain.Fsys) (string, error) {
 }
 
 func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
-	cfg := domain.Cfg{}
+	cfg := domain.Cfg{
+		HTTPMethod: "head,get",
+	}
 	if cfgPath == "" {
 		d, err := findCfg(fsys)
 		if err != nil {
@@ -107,10 +109,18 @@ func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
 }
 
 func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
+	methods := map[string]struct{}{
+		"get":      {},
+		"head":     {},
+		"head,get": {},
+	}
+	if _, ok := methods[cfg.HTTPMethod]; !ok {
+		return cfg, fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
+	}
 	return cfg, nil
 }
 
-func checkURLs(urls map[string]*strset.Set) error {
+func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
@@ -120,7 +130,7 @@ func checkURLs(urls map[string]*strset.Set) error {
 		u := u
 		files := files
 		eg.Go(func() error {
-			if err := checkURL(ctx, client, u); err != nil {
+			if err := checkURL(ctx, cfg, client, u); err != nil {
 				return errors.Wrap(err, files.String())
 			}
 			return nil
@@ -147,11 +157,25 @@ func checkURLWithMethod(ctx context.Context, client http.Client, u, method strin
 	return nil
 }
 
-func checkURL(ctx context.Context, client http.Client, u string) error {
-	if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
-		return nil
+func checkURL(ctx context.Context, cfg domain.Cfg, client http.Client, u string) error {
+	switch cfg.HTTPMethod {
+	case "head,get":
+		if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+			return nil
+		}
+		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+	case "":
+		if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+			return nil
+		}
+		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+	case "get":
+		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+	case "head":
+		return checkURLWithMethod(ctx, client, u, http.MethodHead)
+	default:
+		return fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
 	}
-	return checkURLWithMethod(ctx, client, u, http.MethodGet)
 }
 
 func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {
