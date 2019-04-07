@@ -15,6 +15,7 @@ ignore_urls:
 ignore_hosts: []
 http_method: head,get
 max_request_count: 10
+max_failed_request_count: 5
 http_request_timeout: 10
 `
 )
