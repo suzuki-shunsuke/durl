@@ -123,6 +123,9 @@ func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
 }
 
 func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
+	if len(urls) == 0 {
+		return nil
+	}
 	eg, ctx := errgroup.WithContext(context.Background())
 	if cfg.HTTPRequestTimeout == 0 {
 		cfg.HTTPRequestTimeout = domain.DefaultTimeout
