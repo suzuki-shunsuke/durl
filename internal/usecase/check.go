@@ -128,7 +128,7 @@ func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	if cfg.HTTPRequestTimeout == 0 {
 		cfg.HTTPRequestTimeout = domain.DefaultTimeout
 	}
-	client := http.Client{
+	client := &http.Client{
 		Timeout: domain.DefaultTimeout * time.Second,
 	}
 	if cfg.MaxRequestCount == 0 {
@@ -174,7 +174,7 @@ func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 }
 
 func (lgc *logic) CheckURLWithMethod(
-	ctx context.Context, client http.Client, u, method string,
+	ctx context.Context, client domain.HTTPClient, u, method string,
 ) error {
 	req, err := http.NewRequest(method, u, nil)
 	if err != nil {
@@ -194,7 +194,7 @@ func (lgc *logic) CheckURLWithMethod(
 }
 
 func (lgc *logic) CheckURL(
-	ctx context.Context, cfg domain.Cfg, client http.Client, u string,
+	ctx context.Context, cfg domain.Cfg, client *http.Client, u string,
 ) error {
 	switch cfg.HTTPMethod {
 	case "head,get":

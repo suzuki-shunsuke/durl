@@ -115,7 +115,7 @@ func Test_logicCheckURLs(t *testing.T) {
 }
 
 func Test_logicCheckURL(t *testing.T) {
-	client := http.Client{
+	client := &http.Client{
 		Timeout: domain.DefaultTimeout,
 	}
 
