@@ -115,6 +115,47 @@ func Test_logicCheckURLs(t *testing.T) {
 	}
 }
 
+func Test_logicCheckURLWithMethod(t *testing.T) {
+	data := []struct {
+		title  string
+		client domain.HTTPClient
+		isErr  bool
+	}{{
+		"failed to request",
+		test.NewHTTPClient(t, gomic.DoNothing).SetReturnDo(nil, fmt.Errorf("failed to request")),
+		true,
+	}, {
+		"success",
+		test.NewHTTPClient(t, gomic.DoNothing).
+			SetReturnDo(&http.Response{
+				Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+				StatusCode: 200,
+			}, nil),
+		false,
+	}, {
+		"500 error",
+		test.NewHTTPClient(t, gomic.DoNothing).
+			SetReturnDo(&http.Response{
+				Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+				StatusCode: 500,
+			}, nil),
+		true,
+	}}
+	for _, tt := range data {
+		t.Run(tt.title, func(t *testing.T) {
+			lgc := &logic{
+				client: tt.client,
+			}
+			err := lgc.CheckURLWithMethod(context.Background(), "http://example.com", "get")
+			if tt.isErr {
+				require.NotNil(t, err)
+				return
+			}
+			require.Nil(t, err)
+		})
+	}
+}
+
 func Test_logicCheckURL(t *testing.T) {
 	data := []struct {
 		title    string
