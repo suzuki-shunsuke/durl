@@ -34,9 +34,7 @@ func (reader *cfgReader) FindCfg() (string, error) {
 }
 
 func (reader *cfgReader) ReadCfg(cfgPath string) (domain.Cfg, error) {
-	cfg := domain.Cfg{
-		HTTPMethod: "head,get",
-	}
+	cfg := domain.Cfg{}
 	if cfgPath == "" {
 		d, err := reader.reader.FindCfg()
 		if err != nil {
@@ -60,6 +58,9 @@ func (reader *cfgReader) InitCfg(cfg domain.Cfg) (domain.Cfg, error) {
 		"get":      {},
 		"head":     {},
 		"head,get": {},
+	}
+	if cfg.HTTPMethod == "" {
+		cfg.HTTPMethod = "head,get"
 	}
 	if _, ok := methods[cfg.HTTPMethod]; !ok {
 		return cfg, fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
