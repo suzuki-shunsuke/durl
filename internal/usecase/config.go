@@ -64,5 +64,11 @@ func (reader *cfgReader) InitCfg(cfg domain.Cfg) (domain.Cfg, error) {
 	if _, ok := methods[cfg.HTTPMethod]; !ok {
 		return cfg, fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
 	}
+	if cfg.HTTPRequestTimeout == 0 {
+		cfg.HTTPRequestTimeout = domain.DefaultTimeout
+	}
+	if cfg.MaxRequestCount == 0 {
+		cfg.MaxRequestCount = domain.DefaultMaxRequestCount
+	}
 	return cfg, nil
 }

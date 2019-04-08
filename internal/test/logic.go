@@ -10,7 +10,6 @@ import (
 	testing "testing"
 
 	"github.com/scylladb/go-set/strset"
-	domain "github.com/suzuki-shunsuke/durl/internal/domain"
 	gomic "github.com/suzuki-shunsuke/gomic/gomic"
 )
 
@@ -24,8 +23,8 @@ type (
 			Check                func(stdin io.Reader, cfgPath string) error
 			IsIgnoredURL         func(uri string) bool
 			CheckURLs            func(urls map[string]*strset.Set) error
-			CheckURLWithMethod   func(ctx context.Context, client domain.HTTPClient, u, method string) error
-			CheckURL             func(ctx context.Context, client domain.HTTPClient, u string) error
+			CheckURLWithMethod   func(ctx context.Context, u, method string) error
+			CheckURL             func(ctx context.Context, u string) error
 			ExtractURLsFromFiles func(files *strset.Set) (map[string]*strset.Set, error)
 			ExtractURLsFromFile  func(ctx context.Context, p string) (*strset.Set, error)
 			GetFiles             func(stdin io.Reader) (*strset.Set, error)
@@ -148,35 +147,35 @@ func (mock Logic) fakeZeroCheckURLs(urls map[string]*strset.Set) error {
 }
 
 // CheckURLWithMethod is a mock method.
-func (mock Logic) CheckURLWithMethod(ctx context.Context, client domain.HTTPClient, u, method string) error {
+func (mock Logic) CheckURLWithMethod(ctx context.Context, u, method string) error {
 	methodName := "CheckURLWithMethod" // nolint: goconst
 	if mock.impl.CheckURLWithMethod != nil {
-		return mock.impl.CheckURLWithMethod(ctx, client, u, method)
+		return mock.impl.CheckURLWithMethod(ctx, u, method)
 	}
 	if mock.callbackNotImplemented != nil {
 		mock.callbackNotImplemented(mock.t, mock.name, methodName)
 	} else {
 		gomic.DefaultCallbackNotImplemented(mock.t, mock.name, methodName)
 	}
-	return mock.fakeZeroCheckURLWithMethod(ctx, client, u, method)
+	return mock.fakeZeroCheckURLWithMethod(ctx, u, method)
 }
 
 // SetFuncCheckURLWithMethod sets a method and returns the mock.
-func (mock *Logic) SetFuncCheckURLWithMethod(impl func(ctx context.Context, client domain.HTTPClient, u, method string) error) *Logic {
+func (mock *Logic) SetFuncCheckURLWithMethod(impl func(ctx context.Context, u, method string) error) *Logic {
 	mock.impl.CheckURLWithMethod = impl
 	return mock
 }
 
 // SetReturnCheckURLWithMethod sets a fake method.
 func (mock *Logic) SetReturnCheckURLWithMethod(r0 error) *Logic {
-	mock.impl.CheckURLWithMethod = func(context.Context, domain.HTTPClient, string, string) error {
+	mock.impl.CheckURLWithMethod = func(context.Context, string, string) error {
 		return r0
 	}
 	return mock
 }
 
 // fakeZeroCheckURLWithMethod is a fake method which returns zero values.
-func (mock Logic) fakeZeroCheckURLWithMethod(ctx context.Context, client domain.HTTPClient, u, method string) error {
+func (mock Logic) fakeZeroCheckURLWithMethod(ctx context.Context, u, method string) error {
 	var (
 		r0 error
 	)
@@ -184,35 +183,35 @@ func (mock Logic) fakeZeroCheckURLWithMethod(ctx context.Context, client domain.
 }
 
 // CheckURL is a mock method.
-func (mock Logic) CheckURL(ctx context.Context, client domain.HTTPClient, u string) error {
+func (mock Logic) CheckURL(ctx context.Context, u string) error {
 	methodName := "CheckURL" // nolint: goconst
 	if mock.impl.CheckURL != nil {
-		return mock.impl.CheckURL(ctx, client, u)
+		return mock.impl.CheckURL(ctx, u)
 	}
 	if mock.callbackNotImplemented != nil {
 		mock.callbackNotImplemented(mock.t, mock.name, methodName)
 	} else {
 		gomic.DefaultCallbackNotImplemented(mock.t, mock.name, methodName)
 	}
-	return mock.fakeZeroCheckURL(ctx, client, u)
+	return mock.fakeZeroCheckURL(ctx, u)
 }
 
 // SetFuncCheckURL sets a method and returns the mock.
-func (mock *Logic) SetFuncCheckURL(impl func(ctx context.Context, client domain.HTTPClient, u string) error) *Logic {
+func (mock *Logic) SetFuncCheckURL(impl func(ctx context.Context, u string) error) *Logic {
 	mock.impl.CheckURL = impl
 	return mock
 }
 
 // SetReturnCheckURL sets a fake method.
 func (mock *Logic) SetReturnCheckURL(r0 error) *Logic {
-	mock.impl.CheckURL = func(context.Context, domain.HTTPClient, string) error {
+	mock.impl.CheckURL = func(context.Context, string) error {
 		return r0
 	}
 	return mock
 }
 
 // fakeZeroCheckURL is a fake method which returns zero values.
-func (mock Logic) fakeZeroCheckURL(ctx context.Context, client domain.HTTPClient, u string) error {
+func (mock Logic) fakeZeroCheckURL(ctx context.Context, u string) error {
 	var (
 		r0 error
 	)

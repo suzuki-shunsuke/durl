@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -75,12 +74,6 @@ func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 	if len(urls) == 0 {
 		return nil
 	}
-	if lgc.cfg.HTTPRequestTimeout == 0 {
-		lgc.cfg.HTTPRequestTimeout = domain.DefaultTimeout
-	}
-	client := &http.Client{
-		Timeout: domain.DefaultTimeout * time.Second,
-	}
 	if lgc.cfg.MaxRequestCount == 0 {
 		lgc.cfg.MaxRequestCount = domain.DefaultMaxRequestCount
 	}
@@ -91,7 +84,7 @@ func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 	for u, files := range urls {
 		go func(u string, files *strset.Set) {
 			semaphore <- struct{}{}
-			err := lgc.logic.CheckURL(ctx, client, u)
+			err := lgc.logic.CheckURL(ctx, u)
 			<-semaphore
 			if err == nil {
 				resultChan <- nil
@@ -124,14 +117,14 @@ func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 }
 
 func (lgc *logic) CheckURLWithMethod(
-	ctx context.Context, client domain.HTTPClient, u, method string,
+	ctx context.Context, u, method string,
 ) error {
 	req, err := http.NewRequest(method, u, nil)
 	if err != nil {
 		return err
 	}
 	req = req.WithContext(ctx)
-	resp, err := client.Do(req)
+	resp, err := lgc.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -143,24 +136,22 @@ func (lgc *logic) CheckURLWithMethod(
 	return nil
 }
 
-func (lgc *logic) CheckURL(
-	ctx context.Context, client domain.HTTPClient, u string,
-) error {
+func (lgc *logic) CheckURL(ctx context.Context, u string) error {
 	switch lgc.cfg.HTTPMethod {
 	case "head,get":
-		if err := lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+		if err := lgc.logic.CheckURLWithMethod(ctx, u, http.MethodHead); err == nil {
 			return nil
 		}
-		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, u, http.MethodGet)
 	case "":
-		if err := lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+		if err := lgc.logic.CheckURLWithMethod(ctx, u, http.MethodHead); err == nil {
 			return nil
 		}
-		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, u, http.MethodGet)
 	case "get":
-		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, u, http.MethodGet)
 	case "head":
-		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead)
+		return lgc.logic.CheckURLWithMethod(ctx, u, http.MethodHead)
 	default:
 		return fmt.Errorf(`invalid http_method_type: %s`, lgc.cfg.HTTPMethod)
 	}

@@ -22,8 +22,8 @@ type (
 		Check(stdin io.Reader, cfgPath string) error
 		IsIgnoredURL(uri string) bool
 		CheckURLs(urls map[string]*strset.Set) error
-		CheckURLWithMethod(ctx context.Context, client HTTPClient, u, method string) error
-		CheckURL(ctx context.Context, client HTTPClient, u string) error
+		CheckURLWithMethod(ctx context.Context, u, method string) error
+		CheckURL(ctx context.Context, u string) error
 		ExtractURLsFromFiles(files *strset.Set) (map[string]*strset.Set, error)
 		ExtractURLsFromFile(ctx context.Context, p string) (*strset.Set, error)
 		GetFiles(stdin io.Reader) (*strset.Set, error)

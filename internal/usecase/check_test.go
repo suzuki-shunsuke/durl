@@ -78,7 +78,7 @@ func Test_logicIsIgnoredURL(t *testing.T) {
 		{"http://localhost:8000", true, domain.Cfg{}},
 	}
 	for _, d := range data {
-		lgc := NewLogic(d.cfg, nil)
+		lgc := NewLogic(d.cfg, nil, nil)
 		if d.exp {
 			require.True(t, lgc.IsIgnoredURL(d.url), d.url)
 			continue
@@ -116,10 +116,6 @@ func Test_logicCheckURLs(t *testing.T) {
 }
 
 func Test_logicCheckURL(t *testing.T) {
-	client := &http.Client{
-		Timeout: domain.DefaultTimeout,
-	}
-
 	data := []struct {
 		title    string
 		method   string
@@ -146,13 +142,17 @@ func Test_logicCheckURL(t *testing.T) {
 		test.NewLogic(t, gomic.DoNothing),
 		require.NotNil,
 	}}
+	client := &http.Client{
+		Timeout: domain.DefaultTimeout,
+	}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
 			lgc := &logic{
-				logic: tt.mock,
-				cfg:   domain.Cfg{HTTPMethod: tt.method},
+				logic:  tt.mock,
+				cfg:    domain.Cfg{HTTPMethod: tt.method},
+				client: client,
 			}
-			tt.checkErr(t, lgc.CheckURL(context.Background(), client, "http://example.com"))
+			tt.checkErr(t, lgc.CheckURL(context.Background(), "http://example.com"))
 		})
 	}
 }
@@ -187,7 +187,7 @@ func Test_logicExtractURLsFromFiles(t *testing.T) {
 			for k := range tt.files {
 				files.Add(k)
 			}
-			lgc := NewLogic(domain.Cfg{}, fsys)
+			lgc := NewLogic(domain.Cfg{}, fsys, nil)
 			set, err := lgc.ExtractURLsFromFiles(files)
 			tt.checkErr(t, err)
 			if err == nil {
@@ -223,7 +223,7 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 			}
 			fsys := test.NewFsys(t, nil).
 				SetReturnOpen(rc, tt.err)
-			lgc := NewLogic(domain.Cfg{}, fsys)
+			lgc := NewLogic(domain.Cfg{}, fsys, nil)
 			set, err := lgc.ExtractURLsFromFile(context.Background(), tt.p)
 			tt.checkErr(t, err)
 			if err == nil {
@@ -250,7 +250,7 @@ bar`, require.Nil, strset.New("foo", "bar"),
 bar
 `, require.Nil, strset.New("foo", "bar"),
 	}}
-	lgc := NewLogic(domain.Cfg{}, nil)
+	lgc := NewLogic(domain.Cfg{}, nil, nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
 			arr, err := lgc.GetFiles(bytes.NewBufferString(tt.in))

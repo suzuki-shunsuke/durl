@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -34,7 +36,10 @@ func check(c *cli.Context) error {
 	if err != nil {
 		return cliutil.ConvErrToExitError(err)
 	}
-	logic := usecase.NewLogic(cfg, fsys)
+	logic := usecase.NewLogic(
+		cfg, fsys, &http.Client{
+			Timeout: time.Duration(cfg.HTTPRequestTimeout) * time.Second,
+		})
 	if terminal.IsTerminal(0) {
 		return cliutil.ConvErrToExitError(logic.Check(nil, cfgPath))
 	}
