@@ -7,3 +7,9 @@ items:
   dest:
     package: test
     file: internal/test/fsys_mock.go
+- src:
+    file: internal/domain/interface.go
+    interface: Logic
+  dest:
+    package: test
+    file: internal/test/logic.go
