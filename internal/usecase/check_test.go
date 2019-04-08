@@ -46,8 +46,6 @@ func Test_logicCheck(t *testing.T) {
 	}{{
 		"normal", test.NewLogic(t, gomic.DoNothing), require.Nil,
 	}, {
-		"failed to read config", test.NewLogic(t, gomic.DoNothing).SetReturnReadCfg(domain.Cfg{}, fmt.Errorf("failed to read config")), require.NotNil,
-	}, {
 		"failed to get file paths", test.NewLogic(t, gomic.DoNothing).SetReturnGetFiles(nil, fmt.Errorf("failed to get file paths")), require.NotNil,
 	}, {
 		"failed to extract urls from files", test.NewLogic(t, gomic.DoNothing).SetReturnExtractURLsFromFiles(nil, fmt.Errorf("failed to extract urls from files")), require.NotNil,
@@ -79,13 +77,13 @@ func Test_logicIsIgnoredURL(t *testing.T) {
 		{"http://localhost", true, domain.Cfg{}},
 		{"http://localhost:8000", true, domain.Cfg{}},
 	}
-	lgc := NewLogic(nil)
 	for _, d := range data {
+		lgc := NewLogic(d.cfg, nil)
 		if d.exp {
-			require.True(t, lgc.IsIgnoredURL(d.url, d.cfg), d.url)
+			require.True(t, lgc.IsIgnoredURL(d.url), d.url)
 			continue
 		}
-		require.False(t, lgc.IsIgnoredURL(d.url, d.cfg), d.url)
+		require.False(t, lgc.IsIgnoredURL(d.url), d.url)
 	}
 }
 
@@ -108,8 +106,11 @@ func Test_logicCheckURLs(t *testing.T) {
 	cfg := domain.Cfg{HTTPMethod: "head,get"}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			lgc := &logic{logic: tt.mock}
-			tt.checkErr(t, lgc.CheckURLs(cfg, tt.urls))
+			lgc := &logic{
+				logic: tt.mock,
+				cfg:   cfg,
+			}
+			tt.checkErr(t, lgc.CheckURLs(tt.urls))
 		})
 	}
 }
@@ -147,9 +148,11 @@ func Test_logicCheckURL(t *testing.T) {
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			lgc := &logic{logic: tt.mock}
-			cfg := domain.Cfg{HTTPMethod: tt.method}
-			tt.checkErr(t, lgc.CheckURL(context.Background(), cfg, client, "http://example.com"))
+			lgc := &logic{
+				logic: tt.mock,
+				cfg:   domain.Cfg{HTTPMethod: tt.method},
+			}
+			tt.checkErr(t, lgc.CheckURL(context.Background(), client, "http://example.com"))
 		})
 	}
 }
@@ -184,7 +187,7 @@ func Test_logicExtractURLsFromFiles(t *testing.T) {
 			for k := range tt.files {
 				files.Add(k)
 			}
-			lgc := NewLogic(fsys)
+			lgc := NewLogic(domain.Cfg{}, fsys)
 			set, err := lgc.ExtractURLsFromFiles(files)
 			tt.checkErr(t, err)
 			if err == nil {
@@ -220,7 +223,7 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 			}
 			fsys := test.NewFsys(t, nil).
 				SetReturnOpen(rc, tt.err)
-			lgc := NewLogic(fsys)
+			lgc := NewLogic(domain.Cfg{}, fsys)
 			set, err := lgc.ExtractURLsFromFile(context.Background(), tt.p)
 			tt.checkErr(t, err)
 			if err == nil {
@@ -247,7 +250,7 @@ bar`, require.Nil, strset.New("foo", "bar"),
 bar
 `, require.Nil, strset.New("foo", "bar"),
 	}}
-	lgc := NewLogic(nil)
+	lgc := NewLogic(domain.Cfg{}, nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
 			arr, err := lgc.GetFiles(bytes.NewBufferString(tt.in))

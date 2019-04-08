@@ -7,12 +7,15 @@ import (
 type (
 	logic struct {
 		logic domain.Logic
+		cfg   domain.Cfg
 		fsys  domain.Fsys
 	}
 )
 
-func NewLogic(fsys domain.Fsys) domain.Logic {
+// NewLogic returns a domain.Logic .
+func NewLogic(cfg domain.Cfg, fsys domain.Fsys) domain.Logic {
 	lgc := &logic{
+		cfg:  cfg,
 		fsys: fsys,
 	}
 	lgc.logic = lgc

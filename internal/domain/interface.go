@@ -20,18 +20,23 @@ type (
 	// Logic represents application logic.
 	Logic interface {
 		Check(stdin io.Reader, cfgPath string) error
-		IsIgnoredURL(uri string, cfg Cfg) bool
-		FindCfg() (string, error)
-		ReadCfg(cfgPath string) (Cfg, error)
-		InitCfg(cfg Cfg) (Cfg, error)
-		CheckURLs(cfg Cfg, urls map[string]*strset.Set) error
+		IsIgnoredURL(uri string) bool
+		CheckURLs(urls map[string]*strset.Set) error
 		CheckURLWithMethod(ctx context.Context, client HTTPClient, u, method string) error
-		CheckURL(ctx context.Context, cfg Cfg, client HTTPClient, u string) error
+		CheckURL(ctx context.Context, client HTTPClient, u string) error
 		ExtractURLsFromFiles(files *strset.Set) (map[string]*strset.Set, error)
 		ExtractURLsFromFile(ctx context.Context, p string) (*strset.Set, error)
 		GetFiles(stdin io.Reader) (*strset.Set, error)
 	}
 
+	// CfgReader reads and parses the configuration file.
+	CfgReader interface {
+		FindCfg() (string, error)
+		ReadCfg(cfgPath string) (Cfg, error)
+		InitCfg(cfg Cfg) (Cfg, error)
+	}
+
+	// HTTPClient abstracts *http.Client .
 	HTTPClient interface {
 		Do(req *http.Request) (*http.Response, error)
 	}

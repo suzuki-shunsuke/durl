@@ -13,23 +13,15 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"gopkg.in/yaml.v2"
-
 	"mvdan.cc/xurls"
 
 	"github.com/pkg/errors"
 	"github.com/scylladb/go-set/strset"
-	"github.com/suzuki-shunsuke/go-cliutil"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
 
 func (lgc *logic) Check(stdin io.Reader, cfgPath string) error {
-	cfg, err := lgc.logic.ReadCfg(cfgPath)
-	if err != nil {
-		return err
-	}
-
 	// get file paths
 	files, err := lgc.logic.GetFiles(stdin)
 	if err != nil {
@@ -43,15 +35,15 @@ func (lgc *logic) Check(stdin io.Reader, cfgPath string) error {
 	}
 	// filter url
 	for u := range urls {
-		if lgc.logic.IsIgnoredURL(u, cfg) {
+		if lgc.logic.IsIgnoredURL(u) {
 			delete(urls, u)
 		}
 	}
 
-	return lgc.logic.CheckURLs(cfg, urls)
+	return lgc.logic.CheckURLs(urls)
 }
 
-func (lgc *logic) IsIgnoredURL(uri string, cfg domain.Cfg) bool {
+func (lgc *logic) IsIgnoredURL(uri string) bool {
 	u, err := url.Parse(uri)
 	if err != nil {
 		// ignore url if it is failed to parse the url
@@ -66,12 +58,12 @@ func (lgc *logic) IsIgnoredURL(uri string, cfg domain.Cfg) bool {
 			return true
 		}
 	}
-	for _, u := range cfg.IgnoreURLs {
+	for _, u := range lgc.cfg.IgnoreURLs {
 		if uri == u {
 			return true
 		}
 	}
-	for _, h := range cfg.IgnoreHosts {
+	for _, h := range lgc.cfg.IgnoreHosts {
 		if u.Host == h {
 			return true
 		}
@@ -79,69 +71,27 @@ func (lgc *logic) IsIgnoredURL(uri string, cfg domain.Cfg) bool {
 	return false
 }
 
-func (lgc *logic) FindCfg() (string, error) {
-	wd, err := lgc.fsys.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return cliutil.FindFile(wd, ".durl.yml", lgc.fsys.Exist)
-}
-
-func (lgc *logic) ReadCfg(cfgPath string) (domain.Cfg, error) {
-	cfg := domain.Cfg{
-		HTTPMethod: "head,get",
-	}
-	if cfgPath == "" {
-		d, err := lgc.logic.FindCfg()
-		if err != nil {
-			return cfg, err
-		}
-		cfgPath = d
-	}
-	rc, err := lgc.fsys.Open(cfgPath)
-	if err != nil {
-		return cfg, err
-	}
-	defer rc.Close()
-	if err := yaml.NewDecoder(rc).Decode(&cfg); err != nil {
-		return cfg, err
-	}
-	return lgc.logic.InitCfg(cfg)
-}
-
-func (lgc *logic) InitCfg(cfg domain.Cfg) (domain.Cfg, error) {
-	methods := map[string]struct{}{
-		"get":      {},
-		"head":     {},
-		"head,get": {},
-	}
-	if _, ok := methods[cfg.HTTPMethod]; !ok {
-		return cfg, fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
-	}
-	return cfg, nil
-}
-
-func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
+func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 	if len(urls) == 0 {
 		return nil
 	}
-	if cfg.HTTPRequestTimeout == 0 {
-		cfg.HTTPRequestTimeout = domain.DefaultTimeout
+	if lgc.cfg.HTTPRequestTimeout == 0 {
+		lgc.cfg.HTTPRequestTimeout = domain.DefaultTimeout
 	}
 	client := &http.Client{
 		Timeout: domain.DefaultTimeout * time.Second,
 	}
-	if cfg.MaxRequestCount == 0 {
-		cfg.MaxRequestCount = domain.DefaultMaxRequestCount
+	if lgc.cfg.MaxRequestCount == 0 {
+		lgc.cfg.MaxRequestCount = domain.DefaultMaxRequestCount
 	}
-	semaphore := make(chan struct{}, cfg.MaxRequestCount)
+	semaphore := make(chan struct{}, lgc.cfg.MaxRequestCount)
 	resultChan := make(chan error, len(urls))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for u, files := range urls {
 		go func(u string, files *strset.Set) {
 			semaphore <- struct{}{}
-			err := lgc.logic.CheckURL(ctx, cfg, client, u)
+			err := lgc.logic.CheckURL(ctx, client, u)
 			<-semaphore
 			if err == nil {
 				resultChan <- nil
@@ -151,7 +101,7 @@ func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 		}(u, files)
 	}
 	endCount := len(urls)
-	failedCount := cfg.MaxFailedRequestCount
+	failedCount := lgc.cfg.MaxFailedRequestCount
 	for {
 		select {
 		case err := <-resultChan:
@@ -161,7 +111,7 @@ func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 				fmt.Fprintln(os.Stderr, err)
 			}
 			if endCount == 0 {
-				if failedCount != cfg.MaxFailedRequestCount {
+				if failedCount != lgc.cfg.MaxFailedRequestCount {
 					return fmt.Errorf("")
 				}
 				return nil
@@ -194,9 +144,9 @@ func (lgc *logic) CheckURLWithMethod(
 }
 
 func (lgc *logic) CheckURL(
-	ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string,
+	ctx context.Context, client domain.HTTPClient, u string,
 ) error {
-	switch cfg.HTTPMethod {
+	switch lgc.cfg.HTTPMethod {
 	case "head,get":
 		if err := lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
 			return nil
@@ -212,7 +162,7 @@ func (lgc *logic) CheckURL(
 	case "head":
 		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead)
 	default:
-		return fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
+		return fmt.Errorf(`invalid http_method_type: %s`, lgc.cfg.HTTPMethod)
 	}
 }
 
