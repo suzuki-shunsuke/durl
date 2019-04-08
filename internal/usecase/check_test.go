@@ -15,6 +15,7 @@ import (
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/stretchr/testify/require"
+	"github.com/suzuki-shunsuke/gomic/gomic"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 	"github.com/suzuki-shunsuke/durl/internal/test"
@@ -44,46 +45,23 @@ func Test_logicCheck(t *testing.T) {
 	defer gock.Off()
 	data := []struct {
 		title    string
-		in       string
-		replies  map[string]int
-		files    map[string]File
+		mock     domain.Logic
 		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", "foo.txt", map[string]int{"/foo": 200},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.Nil,
+		"normal", test.NewLogic(t, gomic.DoNothing), require.Nil,
 	}, {
-		"ignore url", "foo.txt", map[string]int{"/foo": 500},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://github.com/foo"]}`), nil},
-		}, require.Nil,
+		"failed to read config", test.NewLogic(t, gomic.DoNothing).SetReturnReadCfg(domain.Cfg{}, fmt.Errorf("failed to read config")), require.NotNil,
 	}, {
-		"http error", "foo.txt", map[string]int{"/foo": 500},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.NotNil,
+		"failed to get file paths", test.NewLogic(t, gomic.DoNothing).SetReturnGetFiles(nil, fmt.Errorf("failed to get file paths")), require.NotNil,
 	}, {
-		"file read error", "foo.txt", map[string]int{"/foo": 200},
-		map[string]File{
-			"foo.txt":             {nil, fmt.Errorf("failed to read a file")},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.Nil,
+		"failed to extract urls from files", test.NewLogic(t, gomic.DoNothing).SetReturnExtractURLsFromFiles(nil, fmt.Errorf("failed to extract urls from files")), require.NotNil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			g := gock.New("http://github.com")
-			for p, c := range tt.replies {
-				g.Head(p).Reply(c)
+			lgc := &logic{
+				logic: tt.mock,
 			}
-			fsys := newFsys(t, tt.files).
-				SetReturnGetwd("/home/foo", nil).
-				SetReturnExist(true)
-			lgc := NewLogic(fsys)
-			tt.checkErr(t, lgc.Check(bytes.NewBufferString(tt.in), ""))
+			tt.checkErr(t, lgc.Check(bytes.NewBufferString("stdin"), ""))
 		})
 	}
 }
