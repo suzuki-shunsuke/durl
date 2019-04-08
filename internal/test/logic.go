@@ -7,7 +7,6 @@ package test
 import (
 	"context"
 	"io"
-	"net/http"
 	testing "testing"
 
 	"github.com/scylladb/go-set/strset"
@@ -29,7 +28,7 @@ type (
 			InitCfg              func(cfg domain.Cfg) (domain.Cfg, error)
 			CheckURLs            func(cfg domain.Cfg, urls map[string]*strset.Set) error
 			CheckURLWithMethod   func(ctx context.Context, client domain.HTTPClient, u, method string) error
-			CheckURL             func(ctx context.Context, cfg domain.Cfg, client *http.Client, u string) error
+			CheckURL             func(ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string) error
 			ExtractURLsFromFiles func(files *strset.Set) (map[string]*strset.Set, error)
 			ExtractURLsFromFile  func(ctx context.Context, p string) (*strset.Set, error)
 			GetFiles             func(stdin io.Reader) (*strset.Set, error)
@@ -299,7 +298,7 @@ func (mock Logic) fakeZeroCheckURLWithMethod(ctx context.Context, client domain.
 }
 
 // CheckURL is a mock method.
-func (mock Logic) CheckURL(ctx context.Context, cfg domain.Cfg, client *http.Client, u string) error {
+func (mock Logic) CheckURL(ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string) error {
 	methodName := "CheckURL" // nolint: goconst
 	if mock.impl.CheckURL != nil {
 		return mock.impl.CheckURL(ctx, cfg, client, u)
@@ -313,21 +312,21 @@ func (mock Logic) CheckURL(ctx context.Context, cfg domain.Cfg, client *http.Cli
 }
 
 // SetFuncCheckURL sets a method and returns the mock.
-func (mock *Logic) SetFuncCheckURL(impl func(ctx context.Context, cfg domain.Cfg, client *http.Client, u string) error) *Logic {
+func (mock *Logic) SetFuncCheckURL(impl func(ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string) error) *Logic {
 	mock.impl.CheckURL = impl
 	return mock
 }
 
 // SetReturnCheckURL sets a fake method.
 func (mock *Logic) SetReturnCheckURL(r0 error) *Logic {
-	mock.impl.CheckURL = func(context.Context, domain.Cfg, *http.Client, string) error {
+	mock.impl.CheckURL = func(context.Context, domain.Cfg, domain.HTTPClient, string) error {
 		return r0
 	}
 	return mock
 }
 
 // fakeZeroCheckURL is a fake method which returns zero values.
-func (mock Logic) fakeZeroCheckURL(ctx context.Context, cfg domain.Cfg, client *http.Client, u string) error {
+func (mock Logic) fakeZeroCheckURL(ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string) error {
 	var (
 		r0 error
 	)

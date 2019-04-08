@@ -194,7 +194,7 @@ func (lgc *logic) CheckURLWithMethod(
 }
 
 func (lgc *logic) CheckURL(
-	ctx context.Context, cfg domain.Cfg, client *http.Client, u string,
+	ctx context.Context, cfg domain.Cfg, client domain.HTTPClient, u string,
 ) error {
 	switch cfg.HTTPMethod {
 	case "head,get":
