@@ -112,6 +112,14 @@ ignore_urls:
 ignore_hosts:
   - localhost.com
 http_method: head,get
+# max parallel http request count.
+# the default is 10
+max_request_count: 10
+# when the number of failed http request become `max_failed_request_count` + 1, exit
+# the default is 0
+max_failed_request_count: 5
+# the default is 10 second
+http_request_timeout: 10
 ```
 
 `http_method` is the HTTP method used to check urls.
