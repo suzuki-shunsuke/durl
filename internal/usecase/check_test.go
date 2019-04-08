@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -120,36 +119,42 @@ func Test_logicCheckURLs(t *testing.T) {
 }
 
 func Test_logicCheckURL(t *testing.T) {
-	defer gock.Off()
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
 	}
 
 	data := []struct {
 		title    string
-		path     string
-		reply    int
+		method   string
+		mock     domain.Logic
 		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", "/foo", 200, require.Nil,
+		"get", "get",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
 	}, {
-		"500 error", "/bar", 500, require.NotNil,
+		"head", "head",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"head,get", "head,get",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"empty", "",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"invalid method", "invalid method",
+		test.NewLogic(t, gomic.DoNothing),
+		require.NotNil,
 	}}
-	lgc := NewLogic(nil)
-	for _, m := range []string{"", "head,get", "get"} {
-		cfg := domain.Cfg{HTTPMethod: m}
-		for _, tt := range data {
-			t.Run(tt.title, func(t *testing.T) {
-				host, err := url.Parse("http://example.com")
-				if err != nil {
-					t.Fatal(err)
-				}
-				host.Path = tt.path
-				gock.New("http://example.com").
-					Get(tt.path).Reply(tt.reply)
-				tt.checkErr(t, lgc.CheckURL(context.Background(), cfg, client, host.String()))
-			})
-		}
+	for _, tt := range data {
+		t.Run(tt.title, func(t *testing.T) {
+			lgc := &logic{logic: tt.mock}
+			cfg := domain.Cfg{HTTPMethod: tt.method}
+			tt.checkErr(t, lgc.CheckURL(context.Background(), cfg, client, "http://example.com"))
+		})
 	}
 }
 
