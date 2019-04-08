@@ -10,8 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/h2non/gock.v1"
-
 	"github.com/scylladb/go-set/strset"
 	"github.com/stretchr/testify/require"
 	"github.com/suzuki-shunsuke/gomic/gomic"
@@ -41,7 +39,6 @@ func newFsys(t *testing.T, files map[string]File) *test.Fsys {
 }
 
 func Test_logicCheck(t *testing.T) {
-	defer gock.Off()
 	data := []struct {
 		title    string
 		mock     domain.Logic
@@ -93,7 +90,6 @@ func Test_logicIsIgnoredURL(t *testing.T) {
 }
 
 func Test_logicCheckURLs(t *testing.T) {
-	defer gock.Off()
 	data := []struct {
 		title    string
 		mock     domain.Logic
