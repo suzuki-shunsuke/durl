@@ -40,7 +40,7 @@ func newFsys(t *testing.T, files map[string]File) *test.Fsys {
 		})
 }
 
-func TestCheck(t *testing.T) {
+func Test_logicCheck(t *testing.T) {
 	defer gock.Off()
 	data := []struct {
 		title    string
@@ -82,12 +82,13 @@ func TestCheck(t *testing.T) {
 			fsys := newFsys(t, tt.files).
 				SetReturnGetwd("/home/foo", nil).
 				SetReturnExist(true)
-			tt.checkErr(t, Check(fsys, bytes.NewBufferString(tt.in), ""))
+			lgc := NewLogic(fsys)
+			tt.checkErr(t, lgc.Check(bytes.NewBufferString(tt.in), ""))
 		})
 	}
 }
 
-func Test_isIgnoredURL(t *testing.T) {
+func Test_logicIsIgnoredURL(t *testing.T) {
 	data := []struct {
 		url string
 		exp bool
@@ -104,16 +105,17 @@ func Test_isIgnoredURL(t *testing.T) {
 		{"http://localhost", true, domain.Cfg{}},
 		{"http://localhost:8000", true, domain.Cfg{}},
 	}
+	lgc := NewLogic(nil)
 	for _, d := range data {
 		if d.exp {
-			require.True(t, isIgnoredURL(d.url, d.cfg), d.url)
+			require.True(t, lgc.IsIgnoredURL(d.url, d.cfg), d.url)
 			continue
 		}
-		require.False(t, isIgnoredURL(d.url, d.cfg), d.url)
+		require.False(t, lgc.IsIgnoredURL(d.url, d.cfg), d.url)
 	}
 }
 
-func Test_checkURLs(t *testing.T) {
+func Test_logicCheckURLs(t *testing.T) {
 	defer gock.Off()
 	data := []struct {
 		title    string
@@ -133,18 +135,19 @@ func Test_checkURLs(t *testing.T) {
 		}, require.NotNil,
 	}}
 	cfg := domain.Cfg{HTTPMethod: "head,get"}
+	lgc := NewLogic(nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
 			g := gock.New("http://example.com")
 			for p, c := range tt.replies {
 				g.Head(p).Reply(c)
 			}
-			tt.checkErr(t, checkURLs(cfg, tt.urls))
+			tt.checkErr(t, lgc.CheckURLs(cfg, tt.urls))
 		})
 	}
 }
 
-func Test_checkURL(t *testing.T) {
+func Test_logicCheckURL(t *testing.T) {
 	defer gock.Off()
 	client := http.Client{
 		Timeout: domain.DefaultTimeout,
@@ -160,6 +163,7 @@ func Test_checkURL(t *testing.T) {
 	}, {
 		"500 error", "/bar", 500, require.NotNil,
 	}}
+	lgc := NewLogic(nil)
 	for _, m := range []string{"", "head,get", "get"} {
 		cfg := domain.Cfg{HTTPMethod: m}
 		for _, tt := range data {
@@ -171,13 +175,13 @@ func Test_checkURL(t *testing.T) {
 				host.Path = tt.path
 				gock.New("http://example.com").
 					Get(tt.path).Reply(tt.reply)
-				tt.checkErr(t, checkURL(context.Background(), cfg, client, host.String()))
+				tt.checkErr(t, lgc.CheckURL(context.Background(), cfg, client, host.String()))
 			})
 		}
 	}
 }
 
-func Test_extractURLsFromFiles(t *testing.T) {
+func Test_logicExtractURLsFromFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		files    map[string]File
@@ -207,7 +211,8 @@ func Test_extractURLsFromFiles(t *testing.T) {
 			for k := range tt.files {
 				files.Add(k)
 			}
-			set, err := extractURLsFromFiles(fsys, files)
+			lgc := NewLogic(fsys)
+			set, err := lgc.ExtractURLsFromFiles(files)
 			tt.checkErr(t, err)
 			if err == nil {
 				require.Equal(t, tt.set, set)
@@ -216,7 +221,7 @@ func Test_extractURLsFromFiles(t *testing.T) {
 	}
 }
 
-func Test_extractURLsFromFile(t *testing.T) {
+func Test_logicExtractURLsFromFile(t *testing.T) {
 	data := []struct {
 		title    string
 		buf      []byte
@@ -242,7 +247,8 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 			}
 			fsys := test.NewFsys(t, nil).
 				SetReturnOpen(rc, tt.err)
-			set, err := extractURLsFromFile(context.Background(), fsys, tt.p)
+			lgc := NewLogic(fsys)
+			set, err := lgc.ExtractURLsFromFile(context.Background(), tt.p)
 			tt.checkErr(t, err)
 			if err == nil {
 				if !set.IsEqual(tt.set) {
@@ -253,7 +259,7 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 	}
 }
 
-func Test_getFiles(t *testing.T) {
+func Test_logicGetFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		in       string
@@ -268,9 +274,10 @@ bar`, require.Nil, strset.New("foo", "bar"),
 bar
 `, require.Nil, strset.New("foo", "bar"),
 	}}
+	lgc := NewLogic(nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			arr, err := getFiles(bytes.NewBufferString(tt.in))
+			arr, err := lgc.GetFiles(bytes.NewBufferString(tt.in))
 			tt.checkErr(t, err)
 			if err != nil {
 				if !arr.IsEqual(tt.arr) {

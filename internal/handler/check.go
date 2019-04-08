@@ -28,10 +28,9 @@ var CheckCommand = cli.Command{
 
 func check(c *cli.Context) error {
 	cfgPath := c.String("config")
+	logic := usecase.NewLogic(infra.Fsys{})
 	if terminal.IsTerminal(0) {
-		return cliutil.ConvErrToExitError(
-			usecase.Check(infra.Fsys{}, nil, cfgPath))
+		return cliutil.ConvErrToExitError(logic.Check(nil, cfgPath))
 	}
-	return cliutil.ConvErrToExitError(
-		usecase.Check(infra.Fsys{}, os.Stdin, cfgPath))
+	return cliutil.ConvErrToExitError(logic.Check(os.Stdin, cfgPath))
 }

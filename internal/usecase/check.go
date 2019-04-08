@@ -24,35 +24,34 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
 
-// Check checks whether dead urls are included in files.
-func Check(fsys domain.Fsys, stdin io.Reader, cfgPath string) error {
-	cfg, err := readCfg(fsys, cfgPath)
+func (lgc *logic) Check(stdin io.Reader, cfgPath string) error {
+	cfg, err := lgc.logic.ReadCfg(cfgPath)
 	if err != nil {
 		return err
 	}
 
 	// get file paths
-	files, err := getFiles(stdin)
+	files, err := lgc.logic.GetFiles(stdin)
 	if err != nil {
 		return err
 	}
 	// urls is a map whose key is url and value is file paths which include the url
 	// url -> file paths
-	urls, err := extractURLsFromFiles(fsys, files)
+	urls, err := lgc.logic.ExtractURLsFromFiles(files)
 	if err != nil {
 		return err
 	}
 	// filter url
 	for u := range urls {
-		if isIgnoredURL(u, cfg) {
+		if lgc.logic.IsIgnoredURL(u, cfg) {
 			delete(urls, u)
 		}
 	}
 
-	return checkURLs(cfg, urls)
+	return lgc.logic.CheckURLs(cfg, urls)
 }
 
-func isIgnoredURL(uri string, cfg domain.Cfg) bool {
+func (lgc *logic) IsIgnoredURL(uri string, cfg domain.Cfg) bool {
 	u, err := url.Parse(uri)
 	if err != nil {
 		// ignore url if it is failed to parse the url
@@ -80,26 +79,26 @@ func isIgnoredURL(uri string, cfg domain.Cfg) bool {
 	return false
 }
 
-func findCfg(fsys domain.Fsys) (string, error) {
-	wd, err := fsys.Getwd()
+func (lgc *logic) FindCfg() (string, error) {
+	wd, err := lgc.fsys.Getwd()
 	if err != nil {
 		return "", err
 	}
-	return cliutil.FindFile(wd, ".durl.yml", fsys.Exist)
+	return cliutil.FindFile(wd, ".durl.yml", lgc.fsys.Exist)
 }
 
-func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
+func (lgc *logic) ReadCfg(cfgPath string) (domain.Cfg, error) {
 	cfg := domain.Cfg{
 		HTTPMethod: "head,get",
 	}
 	if cfgPath == "" {
-		d, err := findCfg(fsys)
+		d, err := lgc.logic.FindCfg()
 		if err != nil {
 			return cfg, err
 		}
 		cfgPath = d
 	}
-	rc, err := fsys.Open(cfgPath)
+	rc, err := lgc.fsys.Open(cfgPath)
 	if err != nil {
 		return cfg, err
 	}
@@ -107,10 +106,10 @@ func readCfg(fsys domain.Fsys, cfgPath string) (domain.Cfg, error) {
 	if err := yaml.NewDecoder(rc).Decode(&cfg); err != nil {
 		return cfg, err
 	}
-	return initCfg(cfg)
+	return lgc.logic.InitCfg(cfg)
 }
 
-func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
+func (lgc *logic) InitCfg(cfg domain.Cfg) (domain.Cfg, error) {
 	methods := map[string]struct{}{
 		"get":      {},
 		"head":     {},
@@ -122,7 +121,7 @@ func initCfg(cfg domain.Cfg) (domain.Cfg, error) {
 	return cfg, nil
 }
 
-func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
+func (lgc *logic) CheckURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	if len(urls) == 0 {
 		return nil
 	}
@@ -142,7 +141,7 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	for u, files := range urls {
 		go func(u string, files *strset.Set) {
 			semaphore <- struct{}{}
-			err := checkURL(ctx, cfg, client, u)
+			err := lgc.logic.CheckURL(ctx, cfg, client, u)
 			<-semaphore
 			if err == nil {
 				resultChan <- nil
@@ -174,7 +173,9 @@ func checkURLs(cfg domain.Cfg, urls map[string]*strset.Set) error {
 	}
 }
 
-func checkURLWithMethod(ctx context.Context, client http.Client, u, method string) error {
+func (lgc *logic) CheckURLWithMethod(
+	ctx context.Context, client http.Client, u, method string,
+) error {
 	req, err := http.NewRequest(method, u, nil)
 	if err != nil {
 		return err
@@ -192,28 +193,30 @@ func checkURLWithMethod(ctx context.Context, client http.Client, u, method strin
 	return nil
 }
 
-func checkURL(ctx context.Context, cfg domain.Cfg, client http.Client, u string) error {
+func (lgc *logic) CheckURL(
+	ctx context.Context, cfg domain.Cfg, client http.Client, u string,
+) error {
 	switch cfg.HTTPMethod {
 	case "head,get":
-		if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+		if err := lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
 			return nil
 		}
-		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
 	case "":
-		if err := checkURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
+		if err := lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead); err == nil {
 			return nil
 		}
-		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
 	case "get":
-		return checkURLWithMethod(ctx, client, u, http.MethodGet)
+		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodGet)
 	case "head":
-		return checkURLWithMethod(ctx, client, u, http.MethodHead)
+		return lgc.logic.CheckURLWithMethod(ctx, client, u, http.MethodHead)
 	default:
 		return fmt.Errorf(`invalid http_method_type: %s`, cfg.HTTPMethod)
 	}
 }
 
-func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strset.Set, error) {
+func (lgc *logic) ExtractURLsFromFiles(files *strset.Set) (map[string]*strset.Set, error) {
 	// return a map whose key is url and value is file paths which include the url
 	size := files.Size()
 	if size == 0 {
@@ -231,7 +234,7 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 	files.Each(func(p string) bool {
 		eg.Go(func() error {
 			// open a file and extract urls from it
-			arr, err := extractURLsFromFile(ctx, fsys, p)
+			arr, err := lgc.logic.ExtractURLsFromFile(ctx, p)
 			if err != nil {
 				// https://github.com/suzuki-shunsuke/durl/issues/27
 				fmt.Fprintf(os.Stderr, "failed to extract urls from a file %s: %s\n", p, err)
@@ -263,14 +266,14 @@ func extractURLsFromFiles(fsys domain.Fsys, files *strset.Set) (map[string]*strs
 	return urls, nil
 }
 
-func extractURLsFromFile(ctx context.Context, fsys domain.Fsys, p string) (*strset.Set, error) {
+func (lgc *logic) ExtractURLsFromFile(ctx context.Context, p string) (*strset.Set, error) {
 	// open a file and extract urls from it
 	urls := strset.New()
 	errChan := make(chan error, 1)
 	reg := xurls.Strict()
 	go func() {
 		// open a file
-		fi, err := fsys.Open(p)
+		fi, err := lgc.fsys.Open(p)
 		if err != nil {
 			errChan <- err
 			return
@@ -295,7 +298,7 @@ func extractURLsFromFile(ctx context.Context, fsys domain.Fsys, p string) (*strs
 	}
 }
 
-func getFiles(stdin io.Reader) (*strset.Set, error) {
+func (lgc *logic) GetFiles(stdin io.Reader) (*strset.Set, error) {
 	files := strset.New()
 	if stdin != nil {
 		scanner := bufio.NewScanner(stdin)
