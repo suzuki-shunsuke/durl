@@ -7,14 +7,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 
-	"gopkg.in/h2non/gock.v1"
-
 	"github.com/scylladb/go-set/strset"
 	"github.com/stretchr/testify/require"
+	"github.com/suzuki-shunsuke/gomic/gomic"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 	"github.com/suzuki-shunsuke/durl/internal/test"
@@ -40,54 +38,29 @@ func newFsys(t *testing.T, files map[string]File) *test.Fsys {
 		})
 }
 
-func TestCheck(t *testing.T) {
-	defer gock.Off()
+func Test_logicCheck(t *testing.T) {
 	data := []struct {
 		title    string
-		in       string
-		replies  map[string]int
-		files    map[string]File
+		mock     domain.Logic
 		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", "foo.txt", map[string]int{"/foo": 200},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.Nil,
+		"normal", test.NewLogic(t, gomic.DoNothing), require.Nil,
 	}, {
-		"ignore url", "foo.txt", map[string]int{"/foo": 500},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{"ignore_urls": ["http://github.com/foo"]}`), nil},
-		}, require.Nil,
+		"failed to get file paths", test.NewLogic(t, gomic.DoNothing).SetReturnGetFiles(nil, fmt.Errorf("failed to get file paths")), require.NotNil,
 	}, {
-		"http error", "foo.txt", map[string]int{"/foo": 500},
-		map[string]File{
-			"foo.txt":             {[]byte("http://github.com/foo"), nil},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.NotNil,
-	}, {
-		"file read error", "foo.txt", map[string]int{"/foo": 200},
-		map[string]File{
-			"foo.txt":             {nil, fmt.Errorf("failed to read a file")},
-			"/home/foo/.durl.yml": {[]byte(`{}`), nil},
-		}, require.Nil,
+		"failed to extract urls from files", test.NewLogic(t, gomic.DoNothing).SetReturnExtractURLsFromFiles(nil, fmt.Errorf("failed to extract urls from files")), require.NotNil,
 	}}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			g := gock.New("http://github.com")
-			for p, c := range tt.replies {
-				g.Head(p).Reply(c)
+			lgc := &logic{
+				logic: tt.mock,
 			}
-			fsys := newFsys(t, tt.files).
-				SetReturnGetwd("/home/foo", nil).
-				SetReturnExist(true)
-			tt.checkErr(t, Check(fsys, bytes.NewBufferString(tt.in), ""))
+			tt.checkErr(t, lgc.Check(bytes.NewBufferString("stdin"), ""))
 		})
 	}
 }
 
-func Test_isIgnoredURL(t *testing.T) {
+func Test_logicIsIgnoredURL(t *testing.T) {
 	data := []struct {
 		url string
 		exp bool
@@ -105,79 +78,127 @@ func Test_isIgnoredURL(t *testing.T) {
 		{"http://localhost:8000", true, domain.Cfg{}},
 	}
 	for _, d := range data {
+		lgc := NewLogic(d.cfg, nil, nil)
 		if d.exp {
-			require.True(t, isIgnoredURL(d.url, d.cfg), d.url)
+			require.True(t, lgc.IsIgnoredURL(d.url), d.url)
 			continue
 		}
-		require.False(t, isIgnoredURL(d.url, d.cfg), d.url)
+		require.False(t, lgc.IsIgnoredURL(d.url), d.url)
 	}
 }
 
-func Test_checkURLs(t *testing.T) {
-	defer gock.Off()
+func Test_logicCheckURLs(t *testing.T) {
 	data := []struct {
 		title    string
-		replies  map[string]int
+		mock     domain.Logic
 		urls     map[string]*strset.Set
 		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", map[string]int{"/foo": 200},
+		"normal",
+		test.NewLogic(t, gomic.DoNothing),
 		map[string]*strset.Set{
 			"http://example.com/foo": strset.New("foo.txt"),
 		}, require.Nil,
 	}, {
-		"error", map[string]int{"/foo": 200, "/bar": 500},
-		map[string]*strset.Set{
-			"http://example.com/foo": strset.New("foo.txt"),
-			"http://example.com/bar": strset.New("bar.txt"),
-		}, require.NotNil,
+		"urls is empty",
+		test.NewLogic(t, gomic.DoNothing), nil, require.Nil,
 	}}
 	cfg := domain.Cfg{HTTPMethod: "head,get"}
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			g := gock.New("http://example.com")
-			for p, c := range tt.replies {
-				g.Head(p).Reply(c)
+			lgc := &logic{
+				logic: tt.mock,
+				cfg:   cfg,
 			}
-			tt.checkErr(t, checkURLs(cfg, tt.urls))
+			tt.checkErr(t, lgc.CheckURLs(tt.urls))
 		})
 	}
 }
 
-func Test_checkURL(t *testing.T) {
-	defer gock.Off()
-	client := http.Client{
-		Timeout: domain.DefaultTimeout,
-	}
-
+func Test_logicCheckURLWithMethod(t *testing.T) {
 	data := []struct {
-		title    string
-		path     string
-		reply    int
-		checkErr func(require.TestingT, interface{}, ...interface{})
+		title  string
+		client domain.HTTPClient
+		isErr  bool
 	}{{
-		"normal", "/foo", 200, require.Nil,
+		"failed to request",
+		test.NewHTTPClient(t, gomic.DoNothing).SetReturnDo(nil, fmt.Errorf("failed to request")),
+		true,
 	}, {
-		"500 error", "/bar", 500, require.NotNil,
+		"success",
+		test.NewHTTPClient(t, gomic.DoNothing).
+			SetReturnDo(&http.Response{
+				Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+				StatusCode: 200,
+			}, nil),
+		false,
+	}, {
+		"500 error",
+		test.NewHTTPClient(t, gomic.DoNothing).
+			SetReturnDo(&http.Response{
+				Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+				StatusCode: 500,
+			}, nil),
+		true,
 	}}
-	for _, m := range []string{"", "head,get", "get"} {
-		cfg := domain.Cfg{HTTPMethod: m}
-		for _, tt := range data {
-			t.Run(tt.title, func(t *testing.T) {
-				host, err := url.Parse("http://example.com")
-				if err != nil {
-					t.Fatal(err)
-				}
-				host.Path = tt.path
-				gock.New("http://example.com").
-					Get(tt.path).Reply(tt.reply)
-				tt.checkErr(t, checkURL(context.Background(), cfg, client, host.String()))
-			})
-		}
+	for _, tt := range data {
+		t.Run(tt.title, func(t *testing.T) {
+			lgc := &logic{
+				client: tt.client,
+			}
+			err := lgc.CheckURLWithMethod(context.Background(), "http://example.com", "get")
+			if tt.isErr {
+				require.NotNil(t, err)
+				return
+			}
+			require.Nil(t, err)
+		})
 	}
 }
 
-func Test_extractURLsFromFiles(t *testing.T) {
+func Test_logicCheckURL(t *testing.T) {
+	data := []struct {
+		title    string
+		method   string
+		mock     domain.Logic
+		checkErr func(require.TestingT, interface{}, ...interface{})
+	}{{
+		"get", "get",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"head", "head",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"head,get", "head,get",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"empty", "",
+		test.NewLogic(t, gomic.DoNothing),
+		require.Nil,
+	}, {
+		"invalid method", "invalid method",
+		test.NewLogic(t, gomic.DoNothing),
+		require.NotNil,
+	}}
+	client := &http.Client{
+		Timeout: domain.DefaultTimeout,
+	}
+	for _, tt := range data {
+		t.Run(tt.title, func(t *testing.T) {
+			lgc := &logic{
+				logic:  tt.mock,
+				cfg:    domain.Cfg{HTTPMethod: tt.method},
+				client: client,
+			}
+			tt.checkErr(t, lgc.CheckURL(context.Background(), "http://example.com"))
+		})
+	}
+}
+
+func Test_logicExtractURLsFromFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		files    map[string]File
@@ -207,7 +228,8 @@ func Test_extractURLsFromFiles(t *testing.T) {
 			for k := range tt.files {
 				files.Add(k)
 			}
-			set, err := extractURLsFromFiles(fsys, files)
+			lgc := NewLogic(domain.Cfg{}, fsys, nil)
+			set, err := lgc.ExtractURLsFromFiles(files)
 			tt.checkErr(t, err)
 			if err == nil {
 				require.Equal(t, tt.set, set)
@@ -216,7 +238,7 @@ func Test_extractURLsFromFiles(t *testing.T) {
 	}
 }
 
-func Test_extractURLsFromFile(t *testing.T) {
+func Test_logicExtractURLsFromFile(t *testing.T) {
 	data := []struct {
 		title    string
 		buf      []byte
@@ -242,7 +264,8 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 			}
 			fsys := test.NewFsys(t, nil).
 				SetReturnOpen(rc, tt.err)
-			set, err := extractURLsFromFile(context.Background(), fsys, tt.p)
+			lgc := NewLogic(domain.Cfg{}, fsys, nil)
+			set, err := lgc.ExtractURLsFromFile(context.Background(), tt.p)
 			tt.checkErr(t, err)
 			if err == nil {
 				if !set.IsEqual(tt.set) {
@@ -253,7 +276,7 @@ bar`), nil, require.Nil, strset.New(), "foo.txt",
 	}
 }
 
-func Test_getFiles(t *testing.T) {
+func Test_logicGetFiles(t *testing.T) {
 	data := []struct {
 		title    string
 		in       string
@@ -268,9 +291,10 @@ bar`, require.Nil, strset.New("foo", "bar"),
 bar
 `, require.Nil, strset.New("foo", "bar"),
 	}}
+	lgc := NewLogic(domain.Cfg{}, nil, nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			arr, err := getFiles(bytes.NewBufferString(tt.in))
+			arr, err := lgc.GetFiles(bytes.NewBufferString(tt.in))
 			tt.checkErr(t, err)
 			if err != nil {
 				if !arr.IsEqual(tt.arr) {
