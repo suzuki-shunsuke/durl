@@ -97,29 +97,23 @@ func Test_logicCheckURLs(t *testing.T) {
 	defer gock.Off()
 	data := []struct {
 		title    string
-		replies  map[string]int
+		mock     domain.Logic
 		urls     map[string]*strset.Set
 		checkErr func(require.TestingT, interface{}, ...interface{})
 	}{{
-		"normal", map[string]int{"/foo": 200},
+		"normal",
+		test.NewLogic(t, gomic.DoNothing),
 		map[string]*strset.Set{
 			"http://example.com/foo": strset.New("foo.txt"),
 		}, require.Nil,
 	}, {
-		"error", map[string]int{"/foo": 200, "/bar": 500},
-		map[string]*strset.Set{
-			"http://example.com/foo": strset.New("foo.txt"),
-			"http://example.com/bar": strset.New("bar.txt"),
-		}, require.NotNil,
+		"urls is empty",
+		test.NewLogic(t, gomic.DoNothing), nil, require.Nil,
 	}}
 	cfg := domain.Cfg{HTTPMethod: "head,get"}
-	lgc := NewLogic(nil)
 	for _, tt := range data {
 		t.Run(tt.title, func(t *testing.T) {
-			g := gock.New("http://example.com")
-			for p, c := range tt.replies {
-				g.Head(p).Reply(c)
-			}
+			lgc := &logic{logic: tt.mock}
 			tt.checkErr(t, lgc.CheckURLs(cfg, tt.urls))
 		})
 	}
