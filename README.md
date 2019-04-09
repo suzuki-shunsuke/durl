@@ -115,7 +115,8 @@ http_method: head,get
 # max parallel http request count.
 # the default is 10
 max_request_count: 10
-# when the number of failed http request become `max_failed_request_count` + 1, exit
+# when the number of failed http request become `max_failed_request_count` + 1, exit.
+# if max_failed_request_count is -1, don't exit even if how many errors occur.
 # the default is 0
 max_failed_request_count: 5
 # the default is 10 second

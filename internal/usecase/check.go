@@ -109,7 +109,7 @@ func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 				}
 				return nil
 			}
-			if failedCount == -1 {
+			if lgc.cfg.MaxFailedRequestCount != -1 && failedCount == -1 {
 				return fmt.Errorf("too many urls are dead")
 			}
 		}
