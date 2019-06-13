@@ -71,13 +71,19 @@ steps:
     image: plugins/git
     commands:
       - git fetch --tags
+  - name: tag dummy
+    image: plugins/git
+    commands:
+      # bash not found
+      - sh scripts/tag-dummy.sh
     when:
       event:
-        - tag
+        - pull_request
+        - push
   - name: build with goreleaser (not release)
-    image: &docker_goci suzukishunsuke/go-ci:1.0.0
+    image: &docker_goreleaser goreleaser/goreleaser:v0.110.0
     commands:
-      - bash scripts/release.sh
+      - goreleaser release --skip-publish
     environment:
       GO111MODULE: on
     when:
@@ -85,9 +91,9 @@ steps:
         - push
         - pull_request
   - name: build and release with goreleaser
-    image: *docker_goci
+    image: *docker_goreleaser
     commands:
-      - bash scripts/release.sh
+      - goreleaser release
     environment:
       GO111MODULE: on
       GITHUB_TOKEN:
