@@ -3,7 +3,7 @@ kind: pipeline
 name: commitlint
 steps:
   - name: npm install
-    image: &node_image node:10.15.3-alpine
+    image: &node_image node:10.16.0-alpine
     commands:
       - npm i
   - name: tag/commitlint
@@ -37,11 +37,11 @@ steps:
     commands:
       - bash scripts/durl.sh
   - name: go vet
-    image: &image_go golang:1.12.2
+    image: &image_go golang:1.12.6
     commands:
       - go vet ./...
   - name: golangci-lint
-    image: golangci/golangci-lint:v1.16.0
+    image: golangci/golangci-lint:v1.17.1
     commands:
       - golangci-lint run
   - name: go test
