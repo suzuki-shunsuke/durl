@@ -11,7 +11,6 @@
 
 * [npm](https://www.npmjs.com/)
 * [Golang](https://golang.org/)
-* [dep](https://golang.github.io/dep/)
 * [golangci-lint](https://github.com/golangci/golangci-lint)
 * [goreleaser](https://goreleaser.com/)
 * [gomic](https://github.com/suzuki-shunsuke/gomic)
@@ -24,7 +23,7 @@ Please see [package.json](https://github.com/suzuki-shunsuke/durl/blob/master/pa
 
 ```
 $ npm i
-$ dep ensure
+$ go mod download
 ```
 
 ## Lint

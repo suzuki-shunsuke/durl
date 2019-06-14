@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"mvdan.cc/xurls"
+	"mvdan.cc/xurls/v2"
 
 	"github.com/pkg/errors"
 	"github.com/scylladb/go-set/strset"
