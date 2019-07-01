@@ -21,5 +21,5 @@ http_request_timeout: 10
 )
 
 var (
-	IgnoreHosts = []string{"localhost", "example.com", "example.org", "example.net"}
+	IgnoreHosts = []string{"localhost", "example.com", "example.org", "example.net", "127.0.0.1"}
 )
