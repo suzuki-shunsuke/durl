@@ -28,30 +28,41 @@ workspace:
   base: /go
   path: src/github.com/suzuki-shunsuke/durl
 steps:
-  - name: durl
+  - name: download go modules
     image: &image_go golang:1.12.6
+    commands:
+      - go mod download
+    environment:
+      GO111MODULE: on
+      GOPATH: /go
+  - name: durl
+    image: *image_go
     commands:
       - bash scripts/durl.sh
     environment:
       GO111MODULE: on
+      GOPATH: /go
   - name: go vet
     image: *image_go
     commands:
       - go vet ./...
     environment:
       GO111MODULE: on
+      GOPATH: /go
   - name: golangci-lint
     image: golangci/golangci-lint:v1.17.1
     commands:
       - golangci-lint run
     environment:
       GO111MODULE: on
+      GOPATH: /go
   - name: go test
     image: *image_go
     commands:
       - go test -race -covermode=atomic ./...
     environment:
       GO111MODULE: on
+      GOPATH: /go
     when:
       event:
         - pull_request
@@ -61,6 +72,7 @@ steps:
       - bash scripts/codecov-test.sh
     environment:
       GO111MODULE: on
+      GOPATH: /go
       CODECOV_TOKEN:
         from_secret: codecov_token
     when:
@@ -81,11 +93,12 @@ steps:
         - pull_request
         - push
   - name: build with goreleaser (not release)
-    image: &docker_goreleaser goreleaser/goreleaser:v0.110.0
+    image: &docker_goreleaser goreleaser/goreleaser:v0.111.0
     commands:
       - goreleaser release --skip-publish
     environment:
       GO111MODULE: on
+      GOPATH: /go
     when:
       event:
         - push
@@ -96,6 +109,7 @@ steps:
       - goreleaser release
     environment:
       GO111MODULE: on
+      GOPATH: /go
       GITHUB_TOKEN:
         from_secret: github_token
     when:
