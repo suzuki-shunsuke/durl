@@ -2,8 +2,6 @@
 # configuration file of durl, which is a CLI tool to check whether broken urls are included in files.
 # https://github.com/suzuki-shunsuke/durl
 ignore_urls:
-  - http://example.com/foo
-  - http://example.com/bar
   - https://github.com/suzuki-shunsuke/durl/releases/download/v${DURL_VERSION}/durl_${DURL_VERSION}_linux_amd64.tar.gz
   - https://github.com/suzuki-shunsuke/dead-repository
   - https://github.com/suzuki-shunsuke/ignore-repository
