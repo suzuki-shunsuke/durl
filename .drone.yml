@@ -1,142 +1,115 @@
 ---
-kind: pipeline
-name: commitlint
 steps:
-  - name: npm install
-    image: &node_image node:10.16.0-alpine
-    commands:
-      - npm i
-  - name: tag/commitlint
-    image: *node_image
-    commands:
-      - npx commitlint --from HEAD~1 --to HEAD
-    when:
-      event:
-        - tag
-        - push
-  - name: pr/commitlint
-    image: *node_image
-    commands:
-      - npx commitlint --from master --to HEAD || exit 1
-    when:
-      event:
-        - pull_request
----
 kind: pipeline
 name: build
-workspace:
-  base: /go
-  path: src/github.com/suzuki-shunsuke/durl
+clone:
+  depth: 1
+volumes:
+- name: gopath
+  temp: {}
 steps:
-  - name: download go modules
-    image: &image_go golang:1.12.6
-    commands:
-      - go mod download
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-  - name: durl
-    image: *image_go
-    commands:
-      - bash scripts/durl.sh
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-  - name: go vet
-    image: *image_go
-    commands:
-      - go vet ./...
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-  - name: golangci-lint
-    image: golangci/golangci-lint:v1.17.1
-    commands:
-      - golangci-lint run
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-  - name: go test
-    image: *image_go
-    commands:
-      - go test -race -covermode=atomic ./...
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-    when:
-      event:
-        - pull_request
-  - name: codecov
-    image: *image_go
-    commands:
-      - bash scripts/codecov-test.sh
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-      CODECOV_TOKEN:
-        from_secret: codecov_token
-    when:
-      event:
-        - push
-        - tag
-  - name: fetch tags
-    image: plugins/git
-    commands:
-      - git fetch --tags
-  - name: tag dummy
-    image: plugins/git
-    commands:
-      # bash not found
-      - sh scripts/tag-dummy.sh
-    when:
-      event:
-        - pull_request
-        - push
-  - name: build with goreleaser (not release)
-    image: &docker_goreleaser goreleaser/goreleaser:v0.111.0
-    commands:
-      - goreleaser release --skip-publish
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-    when:
-      event:
-        - push
-        - pull_request
-  - name: build and release with goreleaser
-    image: *docker_goreleaser
-    commands:
-      - goreleaser release
-    environment:
-      GO111MODULE: on
-      GOPATH: /go
-      GITHUB_TOKEN:
-        from_secret: github_token
-    when:
-      event:
-        - tag
-  - name: build and push docker
-    image: &docker_plugin plugins/docker:18.09.0
-    settings:
-      tags:
-        - latest
-        - "${DRONE_TAG##v}"
-      repo: quay.io/suzuki_shunsuke/durl
-      registry: quay.io
-      username:
-        from_secret: quayio_username
-      password:
-        from_secret: quayio_password
-    when:
-      event:
-        - tag
-  - name: build docker (not push)
-    image: *docker_plugin
-    settings:
-      repo: quay.io/suzuki_shunsuke/durl
-      registry: quay.io
-      dry_run: true
-    when:
-      event:
-        - pull_request
-        - push
+- name: download go modules
+  image: &image_go golang:1.13.4
+  commands:
+  - go mod download
+  volumes: &volumes
+  - name: gopath
+    path: /go
+  environment:
+    GOPATH: /go
+- name: durl
+  image: *image_go
+  commands:
+  - bash scripts/durl.sh
+  environment:
+    GOPATH: /go
+  volumes: *volumes
+- name: golangci-lint
+  image: golangci/golangci-lint:v1.21.0-alpine
+  commands:
+  - golangci-lint run
+  environment:
+    GOPATH: /go
+  volumes: *volumes
+- name: codecov
+  image: *image_go
+  commands:
+  # bash and cgo seem to be required
+  - bash scripts/codecov-test.sh
+  - curl -s https://codecov.io/bash > /tmp/codecov.sh
+  - test "$LOCAL" = "true" -o "$DRONE_BUILD_EVENT" = "pull_request" || bash /tmp/codecov.sh
+  environment:
+    GOPATH: /go
+    CODECOV_TOKEN:
+      from_secret: codecov_token
+  volumes: *volumes
+- name: remove changes
+  image: &image_git plugins/git
+  commands:
+  # Sometimes it is failed to release by goreleaser due to changes of go.sum
+  - git checkout -- .
+
+- name: fetch tags to release
+  image: *image_git
+  commands:
+  - git fetch --tags
+  when:
+    event:
+    - tag
+- name: release
+  image: &goreleaser goreleaser/goreleaser:v0.123.3
+  commands:
+  - goreleaser release
+  environment:
+    GOPATH: /go
+    GITHUB_TOKEN:
+      from_secret: github_token
+  volumes: *volumes
+  when:
+    event:
+    - tag
+- name: build and push docker
+  image: &docker_plugin plugins/docker:18.09.0
+  settings:
+    tags:
+    - latest
+    - "${DRONE_TAG##v}"
+    repo: &docker_repo quay.io/suzuki_shunsuke/durl
+    registry: &docker_registry quay.io
+    username:
+      from_secret: quayio_username
+    password:
+      from_secret: quayio_password
+  when:
+    event:
+    - tag
+
+- name: create a dummy tag to test releasing
+  image: *image_git
+  commands:
+  - git tag v0.1.0-alpha
+  when:
+    event:
+    - pull_request
+    - push
+- name: release (skip publish)
+  image: *goreleaser
+  commands:
+  - goreleaser release --skip-publish
+  environment:
+    GOPATH: /go
+  volumes: *volumes
+  when:
+    event:
+    - pull_request
+    - push
+- name: build docker (not push)
+  image: *docker_plugin
+  settings:
+    repo: *docker_repo
+    registry: *docker_registry
+    dry_run: true
+  when:
+    event:
+    - pull_request
+    - push
