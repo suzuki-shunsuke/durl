@@ -14,7 +14,6 @@ import (
 
 	"mvdan.cc/xurls/v2"
 
-	"github.com/pkg/errors"
 	"github.com/scylladb/go-set/strset"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
@@ -90,7 +89,7 @@ func (lgc *logic) CheckURLs(urls map[string]*strset.Set) error {
 				resultChan <- nil
 				return
 			}
-			resultChan <- errors.Wrapf(err, "failed to check a url: %s %s", u, files.String())
+			resultChan <- fmt.Errorf("failed to check a url %s %s: %w", u, files.String(), err)
 		}(u, files)
 	}
 	endCount := len(urls)
@@ -235,7 +234,7 @@ func (lgc *logic) ExtractURLsFromFile(ctx context.Context, p string) (*strset.Se
 		return nil, nil
 	case err := <-errChan:
 		if err != nil {
-			return urls, errors.Wrapf(err, "failed to read %s", p)
+			return urls, fmt.Errorf("failed to read %s: %w", p, err)
 		}
 		return urls, nil
 	}
