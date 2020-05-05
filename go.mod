@@ -6,7 +6,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/scylladb/go-set v1.0.2
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.5.1
 	github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211153707-27c6eb3d0965
 	github.com/suzuki-shunsuke/gomic v0.5.2
 	github.com/urfave/cli v1.20.0
