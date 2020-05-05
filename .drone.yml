@@ -25,7 +25,7 @@ steps:
     GOPATH: /go
   volumes: *volumes
 - name: golangci-lint
-  image: golangci/golangci-lint:v1.21.0-alpine
+  image: golangci/golangci-lint:v1.26.0-alpine
   commands:
   - golangci-lint run
   environment:
