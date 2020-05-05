@@ -10,9 +10,8 @@ require (
 	github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211153707-27c6eb3d0965
 	github.com/suzuki-shunsuke/gomic v0.5.2
 	github.com/urfave/cli v1.20.0
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
+	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	golang.org/x/sys v0.0.0-20181206074257-70b957f3b65e // indirect
 	gopkg.in/yaml.v2 v2.2.2
 	mvdan.cc/xurls/v2 v2.0.0
 )
