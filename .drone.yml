@@ -9,37 +9,30 @@ volumes:
   temp: {}
 steps:
 - name: download go modules
-  image: &image_go golang:1.13.4
+  image: golang:1.13.4
   commands:
   - go mod download
   volumes: &volumes
   - name: gopath
     path: /go
-  environment:
-    GOPATH: /go
 - name: durl
-  image: *image_go
+  image: golang:1.13.4
   commands:
   - bash scripts/durl.sh
-  environment:
-    GOPATH: /go
   volumes: *volumes
 - name: golangci-lint
   image: golangci/golangci-lint:v1.26.0-alpine
   commands:
   - golangci-lint run
-  environment:
-    GOPATH: /go
   volumes: *volumes
 - name: codecov
-  image: *image_go
+  image: golang:1.13.4
   commands:
   # bash and cgo seem to be required
   - bash scripts/codecov-test.sh
   - curl -s https://codecov.io/bash > /tmp/codecov.sh
   - test "$LOCAL" = "true" -o "$DRONE_BUILD_EVENT" = "pull_request" || bash /tmp/codecov.sh
   environment:
-    GOPATH: /go
     CODECOV_TOKEN:
       from_secret: codecov_token
   volumes: *volumes
@@ -57,11 +50,10 @@ steps:
     event:
     - tag
 - name: release
-  image: &goreleaser goreleaser/goreleaser:v0.123.3
+  image: goreleaser/goreleaser:v0.123.3
   commands:
   - goreleaser release
   environment:
-    GOPATH: /go
     GITHUB_TOKEN:
       from_secret: github_token
   volumes: *volumes
@@ -69,7 +61,7 @@ steps:
     event:
     - tag
 - name: build and push docker
-  image: &docker_plugin plugins/docker:18.09.0
+  image: plugins/docker:18.09.0
   settings:
     tags:
     - latest
@@ -84,27 +76,17 @@ steps:
     event:
     - tag
 
-- name: create a dummy tag to test releasing
-  image: *image_git
-  commands:
-  - git tag v0.1.0-alpha
-  when:
-    event:
-    - pull_request
-    - push
 - name: release (skip publish)
-  image: *goreleaser
+  image: goreleaser/goreleaser:v0.123.3
   commands:
-  - goreleaser release --skip-publish
-  environment:
-    GOPATH: /go
+  - goreleaser release --snapshot
   volumes: *volumes
   when:
     event:
     - pull_request
     - push
 - name: build docker (not push)
-  image: *docker_plugin
+  image: plugins/docker:18.09.0
   settings:
     repo: *docker_repo
     registry: *docker_registry
