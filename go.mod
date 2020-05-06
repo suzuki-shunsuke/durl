@@ -12,6 +12,6 @@ require (
 	github.com/urfave/cli v1.22.4
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.8
 	mvdan.cc/xurls/v2 v2.0.0
 )
