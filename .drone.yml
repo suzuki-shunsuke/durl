@@ -61,7 +61,7 @@ steps:
     event:
     - tag
 - name: build and push docker
-  image: plugins/docker:18.09.0
+  image: plugins/docker:18.09.2
   settings:
     tags:
     - latest
@@ -86,7 +86,7 @@ steps:
     - pull_request
     - push
 - name: build docker (not push)
-  image: plugins/docker:18.09.0
+  image: plugins/docker:18.09.2
   settings:
     repo: *docker_repo
     registry: *docker_registry
