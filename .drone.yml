@@ -9,14 +9,14 @@ volumes:
   temp: {}
 steps:
 - name: download go modules
-  image: golang:1.13.4
+  image: golang:1.14.2
   commands:
   - go mod download
   volumes: &volumes
   - name: gopath
     path: /go
 - name: durl
-  image: golang:1.13.4
+  image: golang:1.14.2
   commands:
   - bash scripts/durl.sh
   volumes: *volumes
@@ -26,7 +26,7 @@ steps:
   - golangci-lint run
   volumes: *volumes
 - name: codecov
-  image: golang:1.13.4
+  image: golang:1.14.2
   commands:
   # bash and cgo seem to be required
   - bash scripts/codecov-test.sh
