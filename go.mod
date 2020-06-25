@@ -11,7 +11,7 @@ require (
 	github.com/suzuki-shunsuke/gomic v0.6.0
 	github.com/urfave/cli v1.22.4
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	gopkg.in/yaml.v2 v2.3.0
 	mvdan.cc/xurls/v2 v2.0.0
 )
