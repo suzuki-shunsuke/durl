@@ -14,8 +14,8 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/usecase"
 )
 
-// CheckCommand is the sub command "check".
-var CheckCommand = cli.Command{
+// checkCommand is the sub command "check".
+var checkCommand = cli.Command{ //nolint:gochecknoglobals
 	Name:   "check",
 	Usage:  "check files",
 	Action: check,

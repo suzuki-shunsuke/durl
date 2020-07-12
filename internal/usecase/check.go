@@ -131,7 +131,7 @@ func (lgc *logic) CheckURLWithMethod(
 	}
 	resp.Body.Close()
 	// check status code
-	if resp.StatusCode/100 != 2 {
+	if resp.StatusCode/100 != 2 { //nolint:gomnd
 		return fmt.Errorf("%s is dead (%d)", u, resp.StatusCode)
 	}
 	return nil
@@ -195,6 +195,7 @@ func (lgc *logic) ExtractURLsFromFiles(files *strset.Set) (map[string]*strset.Se
 	// url -> file paths
 	urls := map[string]*strset.Set{}
 	for f := range urlsChan {
+		f := f
 		f.urls.Each(func(u string) bool {
 			v, ok := urls[u]
 			if ok {

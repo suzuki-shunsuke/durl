@@ -16,8 +16,8 @@ func Main() {
 	app.Usage = "check whether dead urls are included in files"
 
 	app.Commands = []*cli.Command{
-		&InitCommand,
-		&CheckCommand,
+		&initCommand,
+		&checkCommand,
 	}
-	app.Run(os.Args)
+	_ = app.Run(os.Args)
 }
