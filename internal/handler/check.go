@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/durl/internal/infra"
 	"github.com/suzuki-shunsuke/durl/internal/usecase"
@@ -20,7 +20,7 @@ var CheckCommand = cli.Command{
 	Usage:  "check files",
 	Action: check,
 	Flags: []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "config, c",
 			Usage: "configuration file path",
 			Value: "",

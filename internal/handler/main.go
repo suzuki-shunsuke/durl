@@ -3,7 +3,7 @@ package handler
 import (
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 )
@@ -13,12 +13,11 @@ func Main() {
 	app := cli.NewApp()
 	app.Name = "durl"
 	app.Version = domain.Version
-	app.Author = "suzuki-shunsuke https://github.com/suzuki-shunsuke"
 	app.Usage = "check whether dead urls are included in files"
 
-	app.Commands = []cli.Command{
-		InitCommand,
-		CheckCommand,
+	app.Commands = []*cli.Command{
+		&InitCommand,
+		&CheckCommand,
 	}
 	app.Run(os.Args)
 }

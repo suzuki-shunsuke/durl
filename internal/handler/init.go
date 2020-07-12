@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
 
@@ -15,7 +15,7 @@ var InitCommand = cli.Command{
 	Usage:  "create a configuration file if it doesn't exist",
 	Action: initCmd,
 	Flags: []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "dest, d",
 			Usage: "created configuration file path",
 			Value: ".durl.yml",
