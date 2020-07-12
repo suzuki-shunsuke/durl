@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
 
@@ -9,13 +9,13 @@ import (
 	"github.com/suzuki-shunsuke/durl/internal/usecase"
 )
 
-// InitCommand is the sub command "init".
-var InitCommand = cli.Command{
+// initCommand is the sub command "init".
+var initCommand = cli.Command{ //nolint:gochecknoglobals
 	Name:   "init",
 	Usage:  "create a configuration file if it doesn't exist",
 	Action: initCmd,
 	Flags: []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "dest, d",
 			Usage: "created configuration file path",
 			Value: ".durl.yml",

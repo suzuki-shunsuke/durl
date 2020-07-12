@@ -24,7 +24,7 @@ func (fsys Fsys) Exist(dst string) bool {
 
 // Write writes data to a file.
 func (fsys Fsys) Write(dst string, data []byte) error {
-	return ioutil.WriteFile(dst, data, 0644)
+	return ioutil.WriteFile(dst, data, 0o644) //nolint:gosec
 }
 
 // Getwd returns a current directory path.

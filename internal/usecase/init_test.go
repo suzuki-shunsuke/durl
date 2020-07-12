@@ -1,4 +1,4 @@
-package usecase
+package usecase_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/suzuki-shunsuke/durl/internal/domain"
 	"github.com/suzuki-shunsuke/durl/internal/test"
+	"github.com/suzuki-shunsuke/durl/internal/usecase"
 )
 
 func TestInit(t *testing.T) {
@@ -22,8 +23,9 @@ func TestInit(t *testing.T) {
 		"succeed to write a file", false, test.NewFsys(t, gomic.DoNothing),
 	}}
 	for _, tt := range data {
+		tt := tt
 		t.Run(tt.title, func(t *testing.T) {
-			err := Init(tt.fsys, ".durl.yml")
+			err := usecase.Init(tt.fsys, ".durl.yml")
 			if tt.isErr {
 				require.NotNil(t, err)
 				return
