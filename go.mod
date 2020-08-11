@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/scylladb/go-set v1.0.2
 	github.com/stretchr/testify v1.6.1
 	github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca
@@ -13,5 +12,5 @@ require (
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	gopkg.in/yaml.v2 v2.3.0
-	mvdan.cc/xurls/v2 v2.0.0
+	mvdan.cc/xurls/v2 v2.2.0
 )
